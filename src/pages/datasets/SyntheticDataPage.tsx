@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -34,8 +34,8 @@ const SyntheticDataPage = () => {
                                 <div key={job.id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${job.status === 'Generating' ? 'bg-blue-500/10 text-blue-500 animate-pulse' :
-                                                job.status === 'Completed' ? 'bg-green-500/10 text-green-500' :
-                                                    'bg-muted text-muted-foreground'
+                                            job.status === 'Completed' ? 'bg-green-500/10 text-green-500' :
+                                                'bg-muted text-muted-foreground'
                                             }`}>
                                             {job.status === 'Generating' ? <RefreshCw className="w-5 h-5 animate-spin" /> :
                                                 job.status === 'Completed' ? <CheckCircle2 className="w-5 h-5" /> :

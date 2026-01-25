@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -64,8 +64,8 @@ const AllRunsPage = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Completed' ? 'bg-green-500/10 text-green-500' :
-                                            run.status === 'Flagged' ? 'bg-red-500/10 text-red-500' :
-                                                'bg-yellow-500/10 text-yellow-500'
+                                        run.status === 'Flagged' ? 'bg-red-500/10 text-red-500' :
+                                            'bg-yellow-500/10 text-yellow-500'
                                         }`}>
                                         {run.status}
                                     </span>

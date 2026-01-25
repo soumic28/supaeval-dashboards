@@ -1,7 +1,7 @@
-import React from 'react';
+
 
 import { Badge } from '@/components/ui/Badge';
-import { Copy, ExternalLink } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 const EndpointsPage = () => {
     const endpoints = [

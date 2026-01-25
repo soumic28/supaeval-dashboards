@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 import { Button } from '@/components/ui/Button';
 import { FileText, Database, MoreHorizontal, Plus } from 'lucide-react';
@@ -53,8 +53,8 @@ const MyDatasetsPage = () => {
                                 <td className="px-6 py-4 text-muted-foreground">{dataset.created}</td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${dataset.status === 'Ready'
-                                            ? 'bg-green-500/10 text-green-500'
-                                            : 'bg-yellow-500/10 text-yellow-500'
+                                        ? 'bg-green-500/10 text-green-500'
+                                        : 'bg-yellow-500/10 text-yellow-500'
                                         }`}>
                                         {dataset.status}
                                     </span>

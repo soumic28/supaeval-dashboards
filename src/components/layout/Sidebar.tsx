@@ -89,7 +89,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const NavItemComponent = ({ item }: { item: NavItem }) => {
         const hasChildren = item.children && item.children.length > 0;
         const isExpanded = expandedSections[item.name];
-        const isActive = item.path ? location.pathname === item.path : false;
+
         // Check if any child is active
         const isChildActive = item.children?.some(child => location.pathname === child.path);
 
