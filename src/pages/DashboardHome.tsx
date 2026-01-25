@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Activity, CheckCircle, Clock, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Activity, CheckCircle, Clock, ArrowUpRight, ArrowDownRight, Database, Settings, Play, BarChart2, MessageSquare, Code2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardHome() {
+    const navigate = useNavigate();
+
     const stats = [
         { title: "Quality Score", value: "87%", change: "+2.4%", trend: "up", icon: Activity },
         { title: "Pass Rate", value: "94.2%", change: "+1.1%", trend: "up", icon: CheckCircle },
@@ -16,6 +19,15 @@ export default function DashboardHome() {
         { id: "run-1022", name: "RAG Pipeline Alpha", status: "failed", score: "45%", time: "15 mins ago" },
         { id: "run-1021", name: "Sales Agent", status: "success", score: "88%", time: "1 hour ago" },
         { id: "run-1020", name: "Code Assistant", status: "running", score: "-", time: "Running" },
+    ];
+
+    const navTiles = [
+        { name: 'Datasets', description: 'Manage evaluation datasets & benchmarks', icon: Database, path: '/datasets', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { name: 'Configurations', description: 'Evaluation settings & metric definitions', icon: Settings, path: '/configs', color: 'text-slate-500', bg: 'bg-slate-500/10' },
+        { name: 'Evaluations', description: 'Run and monitor agent evaluations', icon: Play, path: '/evaluations', color: 'text-green-500', bg: 'bg-green-500/10' },
+        { name: 'Dashboards', description: 'Deep dive analytics & failure analysis', icon: BarChart2, path: '/dashboards', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+        { name: 'RLHF', description: 'Review feedback & improve models', icon: MessageSquare, path: '/rlhf', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { name: 'SDK & API', description: 'Integration docs & API keys', icon: Code2, path: '/sdk', color: 'text-pink-500', bg: 'bg-pink-500/10' },
     ];
 
     return (
@@ -57,6 +69,39 @@ export default function DashboardHome() {
                         </Card>
                     </motion.div>
                 ))}
+            </div>
+
+            <div>
+                <h2 className="text-lg font-semibold mb-4">Quick Navigation</h2>
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {navTiles.map((tile, index) => (
+                        <motion.div
+                            key={tile.name}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 + index * 0.05 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate(tile.path)}
+                            className="cursor-pointer"
+                        >
+                            <Card className="h-full hover:border-primary/50 transition-colors">
+                                <CardContent className="p-6 flex items-start gap-4">
+                                    <div className={`p-3 rounded-lg ${tile.bg} ${tile.color}`}>
+                                        <tile.icon className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                            {tile.name}
+                                            <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground mt-1">{tile.description}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
 
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
