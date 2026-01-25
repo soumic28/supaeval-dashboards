@@ -1,13 +1,32 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import DashboardHome from './pages/DashboardHome';
-import DatasetsPage from './pages/DatasetsPage';
-import ConfigsPage from './pages/ConfigsPage';
-import EvaluationsPage from './pages/EvaluationsPage';
-import DashboardsPage from './pages/DashboardsPage';
 import RLHFPage from './pages/RLHFPage';
 import SDKPage from './pages/SDKPage';
+
+// Datasets
+import MyDatasetsPage from './pages/datasets/MyDatasetsPage';
+import MarketplacePage from './pages/datasets/MarketplacePage';
+import SyntheticDataPage from './pages/datasets/SyntheticDataPage';
+
+// Evaluations
+import AllRunsPage from './pages/evaluations/AllRunsPage';
+import ConfigsPage from './pages/evaluations/ConfigsPage';
+import ScheduledPage from './pages/evaluations/ScheduledPage';
+
+// Benchmarks
+import SuitesPage from './pages/benchmarks/SuitesPage';
+import ComparisonsPage from './pages/benchmarks/ComparisonsPage';
+import RegressionPage from './pages/benchmarks/RegressionPage';
+
+// Agents
+import ConnectedAgentsPage from './pages/agents/ConnectedAgentsPage';
+import EndpointsPage from './pages/agents/EndpointsPage';
+
+// Other
+import MetricsPage from './pages/MetricsPage';
+import SettingsPage from './pages/SettingsPage';
+import TeamPage from './pages/TeamPage';
 
 function App() {
   return (
@@ -15,12 +34,36 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<DashboardHome />} />
-          <Route path="/datasets" element={<DatasetsPage />} />
-          <Route path="/configs" element={<ConfigsPage />} />
-          <Route path="/evaluations" element={<EvaluationsPage />} />
-          <Route path="/dashboards" element={<DashboardsPage />} />
+
+          {/* Datasets */}
+          <Route path="/datasets/my-datasets" element={<MyDatasetsPage />} />
+          <Route path="/datasets/marketplace" element={<MarketplacePage />} />
+          <Route path="/datasets/synthetic-data" element={<SyntheticDataPage />} />
+          <Route path="/datasets" element={<Navigate to="/datasets/my-datasets" replace />} />
+
+          {/* Evaluations */}
+          <Route path="/evaluations/runs" element={<AllRunsPage />} />
+          <Route path="/evaluations/configs" element={<ConfigsPage />} />
+          <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
+          <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
+
+          {/* Benchmarks */}
+          <Route path="/benchmarks/suites" element={<SuitesPage />} />
+          <Route path="/benchmarks/comparisons" element={<ComparisonsPage />} />
+          <Route path="/benchmarks/regression" element={<RegressionPage />} />
+          <Route path="/benchmarks" element={<Navigate to="/benchmarks/suites" replace />} />
+
+          {/* Agents */}
+          <Route path="/agents/connected" element={<ConnectedAgentsPage />} />
+          <Route path="/agents/endpoints" element={<EndpointsPage />} />
+          <Route path="/agents" element={<Navigate to="/agents/connected" replace />} />
+
+          <Route path="/metrics" element={<MetricsPage />} />
           <Route path="/rlhf" element={<RLHFPage />} />
           <Route path="/sdk" element={<SDKPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/team" element={<TeamPage />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
