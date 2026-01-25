@@ -25,7 +25,7 @@ export default function DashboardHome() {
                 <p className="text-muted-foreground">Overview of your agent performance and evaluation runs.</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat, index) => (
                     <motion.div
                         key={stat.title}
@@ -59,7 +59,7 @@ export default function DashboardHome() {
                 ))}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
                     <CardHeader>
                         <CardTitle>Recent Evaluations</CardTitle>

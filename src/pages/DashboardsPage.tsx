@@ -21,7 +21,7 @@ export default function DashboardsPage() {
                 <TabsContent value="overview" className="space-y-6">
                     <QualityTrendChart />
 
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Failure Categories</CardTitle>
@@ -53,7 +53,7 @@ export default function DashboardsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="col-span-2">
+                        <Card className="col-span-1 md:col-span-2">
                             <CardHeader>
                                 <CardTitle>Top Failing Prompts</CardTitle>
                             </CardHeader>
@@ -66,7 +66,7 @@ export default function DashboardsPage() {
                                     ].map((item, i) => (
                                         <div key={i} className="flex items-center justify-between border-b border-border/50 pb-2 last:border-0 last:pb-0">
                                             <div className="space-y-1">
-                                                <p className="text-sm font-medium truncate max-w-[300px]">{item.prompt}</p>
+                                                <p className="text-sm font-medium truncate max-w-[150px] md:max-w-[300px]">{item.prompt}</p>
                                                 <Badge variant="outline" className="text-xs">{item.error}</Badge>
                                             </div>
                                             <div className="text-right">

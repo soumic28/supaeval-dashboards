@@ -12,18 +12,18 @@ export default function ConfigsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Configurations</h1>
                     <p className="text-muted-foreground">Manage your evaluation settings and metric definitions.</p>
                 </div>
-                <Button>
+                <Button className="w-full md:w-auto">
                     <Plus className="mr-2 h-4 w-4" />
                     Create Config
                 </Button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {configs.map((config) => (
                     <Card key={config.id} className="hover:border-primary/50 transition-colors cursor-pointer group">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

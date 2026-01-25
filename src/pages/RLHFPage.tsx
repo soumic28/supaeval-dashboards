@@ -6,19 +6,19 @@ import { ThumbsDown, ArrowRight } from 'lucide-react';
 export default function RLHFPage() {
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">RLHF & Feedback</h1>
                     <p className="text-muted-foreground">Review user feedback and improve your models.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline">Export Data</Button>
-                    <Button>Start Labeling Session</Button>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <Button variant="outline" className="flex-1 md:flex-none">Export Data</Button>
+                    <Button className="flex-1 md:flex-none">Start Labeling Session</Button>
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-2">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                <Card className="col-span-1 md:col-span-2">
                     <CardHeader>
                         <CardTitle>Feedback Queue</CardTitle>
                     </CardHeader>
@@ -26,7 +26,7 @@ export default function RLHFPage() {
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
                                 <div key={i} className="border border-border rounded-lg p-4 space-y-3">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <Badge variant="secondary">Conversation #102{i}</Badge>
                                         <span className="text-xs text-muted-foreground">2 hours ago</span>
                                     </div>
@@ -36,7 +36,7 @@ export default function RLHFPage() {
                                     <div className="bg-primary/5 p-3 rounded-md text-sm">
                                         <span className="font-semibold text-primary">Agent:</span> You can reset your password by clicking on the "Forgot Password" link on the login page.
                                     </div>
-                                    <div className="flex items-center justify-between pt-2">
+                                    <div className="flex flex-wrap items-center justify-between pt-2 gap-2">
                                         <div className="flex items-center gap-2">
                                             <ThumbsDown className="h-4 w-4 text-destructive" />
                                             <span className="text-sm text-muted-foreground">User marked as unhelpful</span>

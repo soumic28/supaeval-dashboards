@@ -19,17 +19,17 @@ export default function DatasetsPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Datasets</h1>
                     <p className="text-muted-foreground">Manage your evaluation datasets and benchmarks.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline">
+                <div className="flex gap-2 w-full md:w-auto">
+                    <Button variant="outline" className="flex-1 md:flex-none">
                         <Upload className="mr-2 h-4 w-4" />
                         Import
                     </Button>
-                    <Button>
+                    <Button className="flex-1 md:flex-none">
                         <Plus className="mr-2 h-4 w-4" />
                         New Dataset
                     </Button>
@@ -43,7 +43,7 @@ export default function DatasetsPage() {
                 </TabsList>
 
                 <TabsContent value="my-datasets" className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {myDatasets.map((dataset) => (
                             <Card key={dataset.id} className="hover:border-primary/50 transition-colors cursor-pointer">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -70,7 +70,7 @@ export default function DatasetsPage() {
                 </TabsContent>
 
                 <TabsContent value="marketplace" className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {marketplaceDatasets.map((dataset) => (
                             <Card key={dataset.id}>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
