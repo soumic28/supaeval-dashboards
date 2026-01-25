@@ -13,6 +13,7 @@ import SyntheticDataPage from './pages/datasets/SyntheticDataPage';
 import AllRunsPage from './pages/evaluations/AllRunsPage';
 import ConfigsPage from './pages/evaluations/ConfigsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
+import LayerEvaluationPage from './pages/evaluations/LayerEvaluationPage';
 
 // Benchmarks
 import SuitesPage from './pages/benchmarks/SuitesPage';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/evaluations/runs" element={<AllRunsPage />} />
           <Route path="/evaluations/configs" element={<ConfigsPage />} />
           <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
+          <Route path="/evaluations/layer-by-layer" element={<LayerEvaluationPage />} />
           <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
 
           {/* Benchmarks */}

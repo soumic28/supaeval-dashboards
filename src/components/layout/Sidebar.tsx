@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
             { name: 'All Runs', path: '/evaluations/runs' },
             { name: 'Configurations', path: '/evaluations/configs' },
             { name: 'Scheduled', path: '/evaluations/scheduled' },
+            { name: 'Layer-by-Layer', path: '/evaluations/layer-by-layer' },
         ]
     },
     {
