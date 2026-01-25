@@ -63,18 +63,18 @@ export default function RLHFPage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">Positive Rate</span>
-                                <span className="font-bold text-green-500">88%</span>
+                                <span className="font-bold">88%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">Negative Rate</span>
-                                <span className="font-bold text-red-500">12%</span>
+                                <span className="font-bold">12%</span>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-primary/5 border-primary/20">
+                    <Card className="bg-muted/30 border-border">
                         <CardHeader>
-                            <CardTitle className="text-primary">Improvement Tip</CardTitle>
+                            <CardTitle className="text-foreground">Improvement Tip</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground">

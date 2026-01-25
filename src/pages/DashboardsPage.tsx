@@ -30,21 +30,21 @@ export default function DashboardsPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                                            <div className="w-3 h-3 rounded-full bg-foreground" />
                                             <span className="text-sm">Hallucination</span>
                                         </div>
                                         <span className="font-bold">42%</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                                            <div className="w-3 h-3 rounded-full bg-muted-foreground" />
                                             <span className="text-sm">Retrieval Miss</span>
                                         </div>
                                         <span className="font-bold">35%</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                            <div className="w-3 h-3 rounded-full border border-border" />
                                             <span className="text-sm">Tool Error</span>
                                         </div>
                                         <span className="font-bold">23%</span>
@@ -70,7 +70,7 @@ export default function DashboardsPage() {
                                                 <Badge variant="outline" className="text-xs">{item.error}</Badge>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-sm font-bold text-destructive">{item.count}</span>
+                                                <span className="text-sm font-bold">{item.count}</span>
                                                 <span className="text-xs text-muted-foreground block">failures</span>
                                             </div>
                                         </div>

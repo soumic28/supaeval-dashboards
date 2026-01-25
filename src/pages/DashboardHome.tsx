@@ -44,12 +44,12 @@ export default function DashboardHome() {
                                 <div className="text-2xl font-bold">{stat.value}</div>
                                 <p className="text-xs text-muted-foreground flex items-center mt-1">
                                     {stat.trend === 'up' ? (
-                                        <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
+                                        <ArrowUpRight className="h-3 w-3 mr-1" />
                                     ) : (
-                                        <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+                                        <ArrowDownRight className="h-3 w-3 mr-1" />
                                     )}
-                                    <span className={stat.trend === 'up' ? "text-green-500" : "text-red-500"}>
-                                        {stat.change}
+                                    <span className="font-medium">
+                                        {stat.trend === 'up' ? '+' : ''}{stat.change}
                                     </span>
                                     <span className="ml-1">from last month</span>
                                 </p>
@@ -102,7 +102,7 @@ export default function DashboardHome() {
                                     <span className="font-medium">78%</span>
                                 </div>
                                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-yellow-500 w-[78%]" />
+                                    <div className="h-full bg-foreground w-[78%]" />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -111,7 +111,7 @@ export default function DashboardHome() {
                                     <span className="font-medium">2.1%</span>
                                 </div>
                                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500 w-[98%]" />
+                                    <div className="h-full bg-foreground w-[98%]" />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -120,7 +120,7 @@ export default function DashboardHome() {
                                     <span className="font-medium">95%</span>
                                 </div>
                                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-primary w-[95%]" />
+                                    <div className="h-full bg-foreground w-[95%]" />
                                 </div>
                             </div>
                         </div>

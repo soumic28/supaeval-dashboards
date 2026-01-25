@@ -51,8 +51,8 @@ export function QualityTrendChart() {
                                 itemStyle={{ color: 'hsl(var(--foreground))' }}
                             />
                             <Legend />
-                            <Line yAxisId="left" type="monotone" dataKey="quality" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} activeDot={{ r: 4 }} name="Quality Score" />
-                            <Line yAxisId="right" type="monotone" dataKey="latency" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} name="Latency (s)" />
+                            <Line yAxisId="left" type="monotone" dataKey="quality" stroke="hsl(var(--foreground))" strokeWidth={2} dot={false} activeDot={{ r: 4 }} name="Quality Score" />
+                            <Line yAxisId="right" type="monotone" dataKey="latency" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Latency (s)" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
