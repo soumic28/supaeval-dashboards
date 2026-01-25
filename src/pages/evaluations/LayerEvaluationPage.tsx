@@ -1,25 +1,32 @@
 import { useState, useEffect } from 'react';
 import { LayerSimulation } from '../../components/evaluations/LayerSimulation';
 import { Button } from '../../components/ui/Button';
-import { Play, RotateCcw } from 'lucide-react';
+import { Play, RotateCcw, Settings2 } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
 
-const mockScenario = [
+// Base scenario data
+const baseScenario = [
     {
         id: 'input',
         title: '3.1 Input & Intent Layer',
         description: 'Interprets user query, detects intent, constraints, and task type.',
-        input: { query: "Book a flight to NYC for next Tuesday, under $500" },
+        input: { query: "" }, // Dynamic
         output: {
             intent: "BookFlight",
             entities: { destination: "NYC", date: "next Tuesday", budget: 500 },
             constraints: ["price < 500"]
         },
-        metrics: [
-            { name: 'Intent Classification Accuracy', value: '98.5%', status: 'success' },
-            { name: 'Constraint Adherence Score', value: '1.0', status: 'success' },
-            { name: 'Prompt Ambiguity Score', value: 'Low', status: 'success' },
+        failureModes: [
+            'Misclassified intent (fact vs reasoning vs action)',
+            'Ignoring constraints (tone, length, format)',
+            'Over-verbose or under-informative responses',
         ],
-        duration: 120,
+        evaluationMethods: [
+            'LLM-as-Judge on intent classification',
+            'Rule-based validation (length, format)',
+            'Golden prompt datasets',
+        ],
+        duration: 800,
     },
     {
         id: 'planning',
@@ -32,12 +39,18 @@ const mockScenario = [
                 { step: 2, tool: "UserConfirmation", params: { type: "selection" } }
             ]
         },
-        metrics: [
-            { name: 'Plan Accuracy', value: '100%', status: 'success' },
-            { name: 'Step Coverage %', value: '100%', status: 'success' },
-            { name: 'Reasoning Coherence', value: 'High', status: 'success' },
+        failureModes: [
+            'Incorrect plan',
+            'Missing steps',
+            'Over-planning or unnecessary reasoning',
+            'Hallucinated intermediate steps',
         ],
-        duration: 350,
+        evaluationMethods: [
+            'Plan correctness vs golden plans',
+            'Step coverage analysis',
+            'LLM-based reasoning coherence scoring',
+        ],
+        duration: 1200,
     },
     {
         id: 'retrieval',
@@ -50,12 +63,18 @@ const mockScenario = [
                 seat_preference: "Aisle"
             }
         },
-        metrics: [
-            { name: 'Context Relevance Score', value: '0.92', status: 'success' },
-            { name: 'Recall@K (Simulated)', value: '0.85', status: 'success' },
-            { name: 'Grounding Coverage %', value: '100%', status: 'success' },
+        failureModes: [
+            'Irrelevant documents retrieved',
+            'Missing critical documents',
+            'Too much / too little context',
+            'Similar-name or stale data confusion',
         ],
-        duration: 80,
+        evaluationMethods: [
+            'IR metrics on labeled datasets',
+            'Context attribution checks',
+            'Multi-modal retrieval validation (tables, images)',
+        ],
+        duration: 600,
     },
     {
         id: 'memory',
@@ -63,11 +82,17 @@ const mockScenario = [
         description: 'Stores and retrieves user context and maintains state.',
         input: { session_id: "sess_123", key: "last_search" },
         output: { last_search: null }, // First search in session
-        metrics: [
-            { name: 'Memory Recall Accuracy', value: '100%', status: 'success' },
-            { name: 'Memory Freshness Score', value: '0.98', status: 'success' },
+        failureModes: [
+            'Forgetting important facts',
+            'Using stale or incorrect memory',
+            'Privacy or scope violations',
         ],
-        duration: 25,
+        evaluationMethods: [
+            'Scenario-based replay with memory',
+            'Time-decay and overwrite tests',
+            'Judge-based relevance scoring',
+        ],
+        duration: 300,
     },
     {
         id: 'tool',
@@ -78,12 +103,18 @@ const mockScenario = [
             status: 200,
             data: { flights: [{ id: "DL123", price: 450 }, { id: "UA456", price: 480 }] }
         },
-        metrics: [
-            { name: 'Tool Success Rate', value: '100%', status: 'success' },
-            { name: 'Tool Latency', value: '850ms', status: 'warning' },
-            { name: 'Tool Selection Accuracy', value: '100%', status: 'success' },
+        failureModes: [
+            'Wrong tool selection',
+            'Incorrect parameters',
+            'Ignoring tool errors',
+            'Partial execution without recovery',
         ],
-        duration: 850,
+        evaluationMethods: [
+            'Deterministic test harness',
+            'Mock tool execution',
+            'Contract validation',
+        ],
+        duration: 1500,
     },
     {
         id: 'generation',
@@ -93,12 +124,18 @@ const mockScenario = [
         output: {
             response: "I found two flights to NYC under $500. Delta flight DL123 is $450 (Aisle available). Shall I book it?"
         },
-        metrics: [
-            { name: 'Answer Correctness Score', value: '0.99', status: 'success' },
-            { name: 'Hallucination Rate', value: '0.0%', status: 'success' },
-            { name: 'Readability Score', value: 'High', status: 'success' },
+        failureModes: [
+            'Hallucinations',
+            'Incorrect facts',
+            'Poor structure or tone',
+            'Safety violations',
         ],
-        duration: 1200,
+        evaluationMethods: [
+            'LLM-as-Judge (rubric-based)',
+            'Human review (spot checks)',
+            'Automated factual consistency checks',
+        ],
+        duration: 2000,
     },
     {
         id: 'system',
@@ -106,32 +143,130 @@ const mockScenario = [
         description: 'Ensures reliability, performance, and ROI.',
         input: { total_tokens: 450, total_time: 2625 },
         output: { cost: "$0.004", status: "Optimal" },
-        metrics: [
+        failureModes: [
+            'High latency',
+            'Token overuse',
+            'Poor user satisfaction',
+            'Cost overruns',
+        ],
+        evaluationMethods: [
+            'Production telemetry',
+            'A/B testing',
+            'User feedback loops',
+        ],
+        duration: 100,
+    },
+];
+
+// Metrics for different modes
+const metricsByMode = {
+    offline: [
+        [ // Input
+            { name: 'Intent Classification Accuracy', value: '98.5%', status: 'success' },
+            { name: 'Constraint Adherence Score', value: '1.0', status: 'success' },
+        ],
+        [ // Planning
+            { name: 'Plan Accuracy', value: '100%', status: 'success' },
+            { name: 'Step Coverage %', value: '100%', status: 'success' },
+        ],
+        [ // Retrieval
+            { name: 'Recall@K', value: '0.85', status: 'success' },
+            { name: 'Precision@K', value: '0.92', status: 'success' },
+        ],
+        [ // Memory
+            { name: 'Memory Recall Accuracy', value: '100%', status: 'success' },
+        ],
+        [ // Tool
+            { name: 'Tool Selection Accuracy', value: '100%', status: 'success' },
+            { name: 'Tool Success Rate', value: '100%', status: 'success' },
+        ],
+        [ // Generation
+            { name: 'Answer Correctness Score', value: '0.99', status: 'success' },
+            { name: 'Hallucination Rate', value: '0.0%', status: 'success' },
+        ],
+        [ // System
+            { name: 'Success Rate', value: '100%', status: 'success' },
+        ]
+    ],
+    online: [
+        [ // Input
+            { name: 'Prompt Ambiguity Score', value: 'Low', status: 'success' },
+            { name: 'Over-response Rate', value: '0.02', status: 'success' },
+        ],
+        [ // Planning
+            { name: 'Reasoning Coherence', value: 'High', status: 'success' },
+            { name: 'Hallucinated Step Rate', value: '0%', status: 'success' },
+        ],
+        [ // Retrieval
+            { name: 'Context Relevance Score', value: '0.92', status: 'success' },
+            { name: 'Retrieval Latency', value: '45ms', status: 'success' },
+        ],
+        [ // Memory
+            { name: 'Memory Freshness Score', value: '0.98', status: 'success' },
+            { name: 'Privacy Violation Rate', value: '0%', status: 'success' },
+        ],
+        [ // Tool
+            { name: 'Tool Latency', value: '850ms', status: 'warning' },
+            { name: 'Retry Recovery Rate', value: 'N/A', status: 'success' },
+        ],
+        [ // Generation
+            { name: 'Readability Score', value: 'High', status: 'success' },
+            { name: 'Safety Compliance', value: 'Pass', status: 'success' },
+        ],
+        [ // System
             { name: 'End-to-End Latency', value: '2.6s', status: 'warning' },
             { name: 'Cost per Query', value: '$0.004', status: 'success' },
             { name: 'User Satisfaction', value: 'High', status: 'success' },
-        ],
-        duration: 10,
-    },
-];
+        ]
+    ]
+};
 
 const LayerEvaluationPage = () => {
     const [activeStep, setActiveStep] = useState(-1);
     const [isRunning, setIsRunning] = useState(false);
+    const [userQuery, setUserQuery] = useState("Book a flight to NYC for next Tuesday, under $500");
+    const [mode, setMode] = useState<'offline' | 'online' | 'hybrid'>('hybrid');
+    const [scenario, setScenario] = useState(baseScenario);
+    const [expandAll, setExpandAll] = useState(false);
+
+    // Update scenario when mode changes
+    useEffect(() => {
+        const newScenario = baseScenario.map((layer, index) => {
+            let metrics: any[] = [];
+            if (mode === 'offline') {
+                metrics = metricsByMode.offline[index];
+            } else if (mode === 'online') {
+                metrics = metricsByMode.online[index];
+            } else {
+                // Hybrid: Combine a subset of both
+                metrics = [
+                    ...metricsByMode.offline[index].slice(0, 1),
+                    ...metricsByMode.online[index].slice(0, 2)
+                ];
+            }
+            return { ...layer, metrics };
+        });
+        setScenario(newScenario);
+    }, [mode]);
 
     useEffect(() => {
-        if (isRunning && activeStep < mockScenario.length) {
+        if (isRunning && activeStep < scenario.length) {
             const timer = setTimeout(() => {
                 setActiveStep(prev => prev + 1);
-            }, activeStep === -1 ? 0 : mockScenario[activeStep].duration); // Use mock duration for delay
+            }, activeStep === -1 ? 0 : scenario[activeStep].duration);
 
             return () => clearTimeout(timer);
-        } else if (activeStep >= mockScenario.length) {
+        } else if (activeStep >= scenario.length) {
             setIsRunning(false);
         }
-    }, [isRunning, activeStep]);
+    }, [isRunning, activeStep, scenario]);
 
     const startSimulation = () => {
+        // Update input layer with user query
+        const updatedScenario = [...scenario];
+        updatedScenario[0].input = { query: userQuery };
+        setScenario(updatedScenario);
+
         setActiveStep(-1);
         setIsRunning(true);
     };
@@ -141,36 +276,88 @@ const LayerEvaluationPage = () => {
         setIsRunning(false);
     };
 
+    const toggleSettings = () => {
+        setExpandAll(!expandAll);
+    };
+
     return (
-        <div className="p-8 space-y-8 max-w-5xl mx-auto">
-            <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Layer-by-Layer Evaluation</h1>
-                    <p className="text-muted-foreground text-lg">
-                        Interactive simulation of the agentic evaluation pipeline.
-                    </p>
+        <div className="p-4 md:p-8 space-y-8 max-w-5xl mx-auto">
+            <div className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">Layer-by-Layer Evaluation</h1>
+                        <p className="text-muted-foreground text-lg">
+                            Interactive simulation of the agentic evaluation pipeline.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg border border-border">
+                        {(['offline', 'online', 'hybrid'] as const).map((m) => (
+                            <button
+                                key={m}
+                                onClick={() => setMode(m)}
+                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === m
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                            >
+                                {m.charAt(0).toUpperCase() + m.slice(1)}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div className="flex gap-4">
-                    {!isRunning && activeStep === -1 ? (
-                        <Button onClick={startSimulation} className="gap-2">
-                            <Play className="w-4 h-4" /> Start Simulation
-                        </Button>
-                    ) : (
-                        <Button variant="outline" onClick={resetSimulation} className="gap-2">
-                            <RotateCcw className="w-4 h-4" /> Reset
-                        </Button>
-                    )}
-                </div>
+
+                <Card className="p-6 border-primary/20 bg-primary/5">
+                    <div className="flex flex-col md:flex-row gap-4 items-end">
+                        <div className="flex-1 w-full space-y-2">
+                            <label className="text-sm font-medium text-foreground">Test Query</label>
+                            <input
+                                type="text"
+                                value={userQuery}
+                                onChange={(e) => setUserQuery(e.target.value)}
+                                className="w-full px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                placeholder="Enter a query to test..."
+                                disabled={isRunning}
+                            />
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            {!isRunning && activeStep === -1 ? (
+                                <Button onClick={startSimulation} className="gap-2 w-full sm:w-auto min-w-[140px]">
+                                    <Play className="w-4 h-4" /> Start Evaluation
+                                </Button>
+                            ) : (
+                                <Button variant="outline" onClick={resetSimulation} className="gap-2 w-full sm:w-auto min-w-[140px]">
+                                    <RotateCcw className="w-4 h-4" /> Reset
+                                </Button>
+                            )}
+                            <Button
+                                variant={expandAll ? "default" : "ghost"}
+                                size="icon"
+                                onClick={toggleSettings}
+                                title={expandAll ? "Collapse All" : "Expand All"}
+                                className="hidden sm:flex"
+                            >
+                                <Settings2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                variant={expandAll ? "default" : "outline"}
+                                onClick={toggleSettings}
+                                className="gap-2 w-full sm:hidden"
+                            >
+                                <Settings2 className="w-4 h-4" /> {expandAll ? "Collapse All" : "Expand All"}
+                            </Button>
+                        </div>
+                    </div>
+                </Card>
             </div>
 
-            <div className="relative">
-                {mockScenario.map((layer, index) => (
+            <div className="relative space-y-2">
+                {scenario.map((layer, index) => (
                     <LayerSimulation
                         key={layer.id}
                         layer={layer as any}
-                        isActive={index === activeStep}
+                        isActive={index === activeStep || expandAll}
                         isCompleted={index < activeStep}
-                        isPending={index > activeStep}
+                        isPending={index > activeStep && !expandAll}
                     />
                 ))}
             </div>
