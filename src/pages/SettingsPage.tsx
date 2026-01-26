@@ -2,8 +2,10 @@
 
 import { Button } from '@/components/ui/Button';
 import { User, Lock, Bell, CreditCard } from 'lucide-react';
+import { useTheme } from "@/components/theme-provider"
 
 const SettingsPage = () => {
+    const { setTheme, theme } = useTheme()
     return (
         <div className="space-y-6">
             <div>
@@ -60,8 +62,24 @@ const SettingsPage = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <div className="h-20 w-32 rounded-md bg-background border-2 border-primary ring-2 ring-primary/20 cursor-pointer flex items-center justify-center font-medium">Light</div>
-                            <div className="h-20 w-32 rounded-md bg-slate-950 border border-border cursor-pointer flex items-center justify-center font-medium text-white">Dark</div>
+                            <div
+                                onClick={() => setTheme("light")}
+                                className={`h-20 w-32 rounded-md border-2 cursor-pointer flex items-center justify-center font-medium transition-all ${theme === "light"
+                                    ? "bg-background border-primary ring-2 ring-primary/20"
+                                    : "bg-background border-border hover:border-primary/50"
+                                    }`}
+                            >
+                                Light
+                            </div>
+                            <div
+                                onClick={() => setTheme("dark")}
+                                className={`h-20 w-32 rounded-md border-2 cursor-pointer flex items-center justify-center font-medium text-white transition-all ${theme === "dark"
+                                    ? "bg-slate-950 border-primary ring-2 ring-primary/20"
+                                    : "bg-slate-950 border-border hover:border-primary/50"
+                                    }`}
+                            >
+                                Dark
+                            </div>
                         </div>
                     </div>
                 </div>
