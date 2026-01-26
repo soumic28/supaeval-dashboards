@@ -3,8 +3,10 @@
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Play, Filter, Download } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const AllRunsPage = () => {
+    const { toast } = useToast();
     const runs = [
         { id: "run_8492", config: "Prod Chatbot v2", dataset: "Customer Logs Q4", model: "GPT-4-Turbo", faithfulness: 0.92, relevance: 0.88, status: "Completed", date: "2 mins ago" },
         { id: "run_8491", config: "Staging RAG", dataset: "Wiki Subset", model: "Claude 3 Haiku", faithfulness: 0.85, relevance: 0.91, status: "Completed", date: "1 hour ago" },
@@ -14,6 +16,27 @@ const AllRunsPage = () => {
         { id: "run_8487", config: "Staging RAG", dataset: "Legal Corpus", model: "Claude 3 Opus", faithfulness: 0.96, relevance: 0.95, status: "Completed", date: "1 day ago" },
     ];
 
+    const handleFilter = () => {
+        toast({
+            title: "Filter Runs",
+            description: "Advanced filtering options are coming soon.",
+        });
+    };
+
+    const handleNewRun = () => {
+        toast({
+            title: "New Evaluation Run",
+            description: "Starting a new evaluation run is simulated in this demo.",
+        });
+    };
+
+    const handleDownload = (id: string) => {
+        toast({
+            title: "Download Report",
+            description: `Downloading report for ${id}... (Simulated)`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -22,11 +45,11 @@ const AllRunsPage = () => {
                     <p className="text-muted-foreground">History of all evaluation runs across your projects.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleFilter}>
                         <Filter className="w-4 h-4 mr-2" />
                         Filter
                     </Button>
-                    <Button>
+                    <Button onClick={handleNewRun}>
                         <Play className="w-4 h-4 mr-2" />
                         New Run
                     </Button>
@@ -72,7 +95,7 @@ const AllRunsPage = () => {
                                 </td>
                                 <td className="px-6 py-4 text-muted-foreground text-xs">{run.date}</td>
                                 <td className="px-6 py-4 text-right">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleDownload(run.id)}>
                                         <Download className="w-4 h-4" />
                                     </Button>
                                 </td>

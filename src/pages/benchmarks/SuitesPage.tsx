@@ -3,8 +3,10 @@
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Play, TrendingUp, BookOpen, Calculator, Code } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const SuitesPage = () => {
+    const { toast } = useToast();
     const suites = [
         { id: "mmlu", name: "MMLU", desc: "Massive Multitask Language Understanding", category: "General", items: 57, lastScore: "86.4%", icon: BookOpen },
         { id: "gsm8k", name: "GSM8K", desc: "Grade School Math 8K", category: "Reasoning", items: "8.5k", lastScore: "92.1%", icon: Calculator },
@@ -13,6 +15,20 @@ const SuitesPage = () => {
         { id: "hellaswag", name: "HellaSwag", desc: "Commonsense Natural Language Inference", category: "Reasoning", items: "10k", lastScore: "88.9%", icon: BookOpen },
     ];
 
+    const handleImport = () => {
+        toast({
+            title: "Import Suite",
+            description: "Benchmark suite import is coming soon.",
+        });
+    };
+
+    const handleRun = (name: string) => {
+        toast({
+            title: "Run Benchmark",
+            description: `Starting benchmark run for ${name}... (Simulated)`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -20,7 +36,7 @@ const SuitesPage = () => {
                     <h1 className="text-3xl font-bold tracking-tight">Benchmark Suites</h1>
                     <p className="text-muted-foreground">Standardized benchmarks for evaluating LLM capabilities.</p>
                 </div>
-                <Button>Import Suite</Button>
+                <Button onClick={handleImport}>Import Suite</Button>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +59,7 @@ const SuitesPage = () => {
                                 <span className="text-muted-foreground">Last Score: </span>
                                 <span className="font-bold text-foreground">{suite.lastScore}</span>
                             </div>
-                            <Button size="sm" variant="secondary" className="gap-2">
+                            <Button size="sm" variant="secondary" className="gap-2" onClick={() => handleRun(suite.name)}>
                                 <Play className="w-3 h-3" />
                                 Run
                             </Button>

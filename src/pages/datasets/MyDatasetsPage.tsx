@@ -2,8 +2,10 @@
 
 import { Button } from '@/components/ui/Button';
 import { FileText, Database, MoreHorizontal, Plus } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const MyDatasetsPage = () => {
+    const { toast } = useToast();
     const datasets = [
         { id: 1, name: "Customer Support Logs Q4", type: "JSON", rows: "12,500", size: "4.2 MB", created: "2 days ago", status: "Ready" },
         { id: 2, name: "Product Reviews 2023", type: "CSV", rows: "45,000", size: "15.8 MB", created: "1 week ago", status: "Ready" },
@@ -12,6 +14,20 @@ const MyDatasetsPage = () => {
         { id: 5, name: "Code Snippets (Python)", type: "TXT", rows: "8,500", size: "8.4 MB", created: "1 month ago", status: "Ready" },
     ];
 
+    const handleUpload = () => {
+        toast({
+            title: "Upload Dataset",
+            description: "Dataset upload is currently being processed. This feature will be available soon.",
+        });
+    };
+
+    const handleMoreOptions = (name: string) => {
+        toast({
+            title: "Options",
+            description: `More options for ${name} are not yet implemented.`,
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -19,7 +35,7 @@ const MyDatasetsPage = () => {
                     <h1 className="text-3xl font-bold tracking-tight">My Datasets</h1>
                     <p className="text-muted-foreground">Manage your personal datasets here.</p>
                 </div>
-                <Button>
+                <Button onClick={handleUpload}>
                     <Plus className="w-4 h-4 mr-2" />
                     Upload Dataset
                 </Button>
@@ -60,7 +76,7 @@ const MyDatasetsPage = () => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleMoreOptions(dataset.name)}>
                                         <MoreHorizontal className="w-4 h-4" />
                                     </Button>
                                 </td>
