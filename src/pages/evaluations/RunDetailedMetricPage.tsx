@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+
 import {
     Activity,
     Brain,
@@ -11,11 +11,9 @@ import {
     MessageSquare,
     Cpu,
     ArrowRight,
-    CheckCircle,
-    AlertTriangle,
-    Clock
+
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const layers = [
     {
@@ -132,8 +130,8 @@ export default function RunDetailedMetricPage() {
                         key={layer.id}
                         onClick={() => handleLayerClick(layer.id)}
                         className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${selectedLayerId === layer.id
-                                ? 'bg-primary/10 text-primary shadow-sm'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            ? 'bg-primary/10 text-primary shadow-sm'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                             }`}
                     >
                         <layer.icon className="w-4 h-4" />
