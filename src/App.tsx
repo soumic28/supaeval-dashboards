@@ -15,6 +15,7 @@ import MyPurchasesPage from './pages/datasets/MyPurchasesPage';
 import AllRunsPage from './pages/evaluations/AllRunsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
 import LayerEvaluationPage from './pages/evaluations/LayerEvaluationPage';
+import RunDetailedMetricPage from './pages/evaluations/RunDetailedMetricPage';
 
 // Configurations
 import AgentConfigPage from './pages/configurations/AgentConfigPage';
@@ -53,6 +54,7 @@ function App() {
           <Route path="/evaluations/runs" element={<AllRunsPage />} />
           <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
           <Route path="/evaluations/layer-by-layer" element={<LayerEvaluationPage />} />
+          <Route path="/evaluations/run-details" element={<RunDetailedMetricPage />} />
           <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
 
           {/* Configurations */}
