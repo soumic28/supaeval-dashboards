@@ -13,9 +13,12 @@ import MyPurchasesPage from './pages/datasets/MyPurchasesPage';
 
 // Evaluations
 import AllRunsPage from './pages/evaluations/AllRunsPage';
-import ConfigsPage from './pages/evaluations/ConfigsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
 import LayerEvaluationPage from './pages/evaluations/LayerEvaluationPage';
+
+// Configurations
+import AgentConfigPage from './pages/configurations/AgentConfigPage';
+import MetricsConfigPage from './pages/configurations/MetricsConfigPage';
 
 // Benchmarks
 import SuitesPage from './pages/benchmarks/SuitesPage';
@@ -48,10 +51,14 @@ function App() {
 
           {/* Evaluations */}
           <Route path="/evaluations/runs" element={<AllRunsPage />} />
-          <Route path="/evaluations/configs" element={<ConfigsPage />} />
           <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
           <Route path="/evaluations/layer-by-layer" element={<LayerEvaluationPage />} />
           <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
+
+          {/* Configurations */}
+          <Route path="/configurations/agents" element={<AgentConfigPage />} />
+          <Route path="/configurations/metrics" element={<MetricsConfigPage />} />
+          <Route path="/configurations" element={<Navigate to="/configurations/agents" replace />} />
 
           {/* Benchmarks */}
           <Route path="/benchmarks/suites" element={<SuitesPage />} />

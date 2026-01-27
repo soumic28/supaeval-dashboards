@@ -39,9 +39,16 @@ const navItems: NavItem[] = [
         icon: Play,
         children: [
             { name: 'All Runs', path: '/evaluations/runs' },
-            { name: 'Configurations', path: '/evaluations/configs' },
             { name: 'Scheduled', path: '/evaluations/scheduled' },
             { name: 'Layer-by-Layer', path: '/evaluations/layer-by-layer' },
+        ]
+    },
+    {
+        name: 'Configurations',
+        icon: Settings,
+        children: [
+            { name: 'Agent Config', path: '/configurations/agents' },
+            { name: 'Metrics Config', path: '/configurations/metrics' },
         ]
     },
     {
@@ -76,6 +83,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         'Datasets': true,
         'Evaluations': true,
+        'Configurations': true,
         'Benchmarks': true,
         'Agents': true
     });
