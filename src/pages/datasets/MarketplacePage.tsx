@@ -3,8 +3,10 @@
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Download, Star, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MarketplacePage = () => {
+    const navigate = useNavigate();
     const datasets = [
         { id: 1, title: "Common Crawl Subset", desc: "A curated subset of web crawl data for general language modeling.", price: "Free", rating: 4.8, author: "OpenData", downloads: "12k" },
         { id: 2, title: "Medical Dialogues", desc: "Doctor-patient conversations annotated with medical entities.", price: "$49", rating: 4.9, author: "MedCorp", downloads: "2.3k" },
@@ -22,6 +24,10 @@ const MarketplacePage = () => {
                     <p className="text-muted-foreground">Explore high-quality datasets from the community.</p>
                 </div>
                 <div className="flex gap-2">
+                    <div className="bg-muted p-1 rounded-lg flex">
+                        <Button variant="ghost" size="sm" onClick={() => navigate('/datasets/my-datasets')}>Custom</Button>
+                        <Button variant="ghost" size="sm" className="bg-background shadow-sm" onClick={() => { }}>Public</Button>
+                    </div>
                     <Button variant="outline">My Purchases</Button>
                     <Button>Publish Dataset</Button>
                 </div>

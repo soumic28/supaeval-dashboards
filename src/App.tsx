@@ -8,6 +8,7 @@ import SDKPage from './pages/SDKPage';
 import MyDatasetsPage from './pages/datasets/MyDatasetsPage';
 import MarketplacePage from './pages/datasets/MarketplacePage';
 import SyntheticDataPage from './pages/datasets/SyntheticDataPage';
+import DatasetDetailPage from './pages/datasets/DatasetDetailPage';
 
 // Evaluations
 import AllRunsPage from './pages/evaluations/AllRunsPage';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/datasets/my-datasets" element={<MyDatasetsPage />} />
           <Route path="/datasets/marketplace" element={<MarketplacePage />} />
           <Route path="/datasets/synthetic-data" element={<SyntheticDataPage />} />
+          <Route path="/datasets/:id" element={<DatasetDetailPage />} />
           <Route path="/datasets" element={<Navigate to="/datasets/my-datasets" replace />} />
 
           {/* Evaluations */}
