@@ -9,6 +9,7 @@ import MyDatasetsPage from './pages/datasets/MyDatasetsPage';
 import MarketplacePage from './pages/datasets/MarketplacePage';
 import SyntheticDataPage from './pages/datasets/SyntheticDataPage';
 import DatasetDetailPage from './pages/datasets/DatasetDetailPage';
+import MyPurchasesPage from './pages/datasets/MyPurchasesPage';
 
 // Evaluations
 import AllRunsPage from './pages/evaluations/AllRunsPage';
@@ -39,6 +40,7 @@ function App() {
 
           {/* Datasets */}
           <Route path="/datasets/my-datasets" element={<MyDatasetsPage />} />
+          <Route path="/datasets/my-purchases" element={<MyPurchasesPage />} />
           <Route path="/datasets/marketplace" element={<MarketplacePage />} />
           <Route path="/datasets/synthetic-data" element={<SyntheticDataPage />} />
           <Route path="/datasets/:id" element={<DatasetDetailPage />} />

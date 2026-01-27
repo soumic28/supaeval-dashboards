@@ -1,5 +1,4 @@
-
-
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Download, Star, Database } from 'lucide-react';
@@ -7,14 +6,22 @@ import { useNavigate } from 'react-router-dom';
 
 const MarketplacePage = () => {
     const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState("All");
+
+    const categories = ["All", "Benchmarking", "Finance", "Healthcare", "Legal", "Education"];
+
     const datasets = [
-        { id: 1, title: "Common Crawl Subset", desc: "A curated subset of web crawl data for general language modeling.", price: "Free", rating: 4.8, author: "OpenData", downloads: "12k" },
-        { id: 2, title: "Medical Dialogues", desc: "Doctor-patient conversations annotated with medical entities.", price: "$49", rating: 4.9, author: "MedCorp", downloads: "2.3k" },
-        { id: 3, title: "StackOverflow Code", desc: "High-quality code snippets with accepted answers.", price: "Free", rating: 4.7, author: "DevCommunity", downloads: "45k" },
-        { id: 4, title: "Financial News Sentiment", desc: "Headlines labeled with sentiment for market analysis.", price: "$199", rating: 4.6, author: "FinTech AI", downloads: "800" },
-        { id: 5, title: "Legal Case Summaries", desc: "Summarized court cases for legal NLP tasks.", price: "$99", rating: 4.5, author: "LegalTech", downloads: "1.2k" },
-        { id: 6, title: "Customer Support Emails", desc: "Anonymized support threads for intent classification.", price: "Free", rating: 4.4, author: "SupportAI", downloads: "5k" },
+        { id: 201, title: "Common Crawl Subset", desc: "A curated subset of web crawl data for general language modeling.", price: "Free", rating: 4.8, author: "OpenData", downloads: "12k", category: "Benchmarking" },
+        { id: 202, title: "Medical Dialogues", desc: "Doctor-patient conversations annotated with medical entities.", price: "$49", rating: 4.9, author: "MedCorp", downloads: "2.3k", category: "Healthcare" },
+        { id: 203, title: "StackOverflow Code", desc: "High-quality code snippets with accepted answers.", price: "Free", rating: 4.7, author: "DevCommunity", downloads: "45k", category: "Education" },
+        { id: 204, title: "Financial News Sentiment", desc: "Headlines labeled with sentiment for market analysis.", price: "$199", rating: 4.6, author: "FinTech AI", downloads: "800", category: "Finance" },
+        { id: 205, title: "Legal Case Summaries", desc: "Summarized court cases for legal NLP tasks.", price: "$99", rating: 4.5, author: "LegalTech", downloads: "1.2k", category: "Legal" },
+        { id: 206, title: "Customer Support Emails", desc: "Anonymized support threads for intent classification.", price: "Free", rating: 4.4, author: "SupportAI", downloads: "5k", category: "Benchmarking" },
     ];
+
+    const filteredDatasets = selectedCategory === "All"
+        ? datasets
+        : datasets.filter(d => d.category === selectedCategory);
 
     return (
         <div className="space-y-6">
@@ -28,16 +35,33 @@ const MarketplacePage = () => {
                         <Button variant="ghost" size="sm" onClick={() => navigate('/datasets/my-datasets')}>Custom</Button>
                         <Button variant="ghost" size="sm" className="bg-background shadow-sm" onClick={() => { }}>Public</Button>
                     </div>
-                    <Button variant="outline">My Purchases</Button>
+                    <Button variant="outline" onClick={() => navigate('/datasets/my-purchases')}>My Purchases</Button>
                     <Button>Publish Dataset</Button>
                 </div>
             </div>
 
+            <div className="flex gap-2 overflow-x-auto pb-2">
+                {categories.map((category) => (
+                    <Button
+                        key={category}
+                        variant={selectedCategory === category ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedCategory(category)}
+                        className="whitespace-nowrap rounded-full"
+                    >
+                        {category}
+                    </Button>
+                ))}
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {datasets.map((item) => (
+                {filteredDatasets.map((item) => (
                     <div key={item.id} className="group border rounded-lg overflow-hidden bg-card hover:shadow-md transition-all">
-                        <div className="h-40 bg-gradient-to-br from-primary/5 to-primary/20 flex items-center justify-center">
+                        <div className="h-40 bg-gradient-to-br from-primary/5 to-primary/20 flex items-center justify-center relative">
                             <Database className="w-12 h-12 text-primary/40 group-hover:scale-110 transition-transform" />
+                            <Badge className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90">
+                                {item.category}
+                            </Badge>
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-start justify-between">
@@ -65,7 +89,7 @@ const MarketplacePage = () => {
                                         <span>{item.downloads}</span>
                                     </div>
                                 </div>
-                                <Button size="sm" variant="ghost">View Details</Button>
+                                <Button size="sm" variant="ghost" onClick={() => navigate(`/datasets/${item.id}`, { state: { datasetName: item.title } })}>View Details</Button>
                             </div>
                         </div>
                     </div>
