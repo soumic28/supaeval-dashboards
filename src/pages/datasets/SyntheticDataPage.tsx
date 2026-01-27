@@ -1,10 +1,14 @@
 
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Sparkles, RefreshCw, Clock, CheckCircle2 } from 'lucide-react';
+import { SyntheticDataGenerationModal } from './components/SyntheticDataGenerationModal';
 
 const SyntheticDataPage = () => {
+    const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false);
+
     const jobs = [
         { id: 1, name: "Adversarial Attack Set", template: "Security Testing", count: 1000, progress: 100, status: "Completed", time: "10m ago" },
         { id: 2, name: "Customer Inquiries v2", template: "E-commerce Support", count: 5000, progress: 45, status: "Generating", time: "Running" },
@@ -19,7 +23,10 @@ const SyntheticDataPage = () => {
                     <h1 className="text-3xl font-bold tracking-tight">Synthetic Data</h1>
                     <p className="text-muted-foreground">Generate high-quality synthetic datasets using AI.</p>
                 </div>
-                <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0">
+                <Button
+                    onClick={() => setIsGenerationModalOpen(true)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
+                >
                     <Sparkles className="w-4 h-4 mr-2" />
                     New Generation Job
                 </Button>
@@ -83,6 +90,11 @@ const SyntheticDataPage = () => {
                     </div>
                 </div>
             </div>
+
+            <SyntheticDataGenerationModal
+                open={isGenerationModalOpen}
+                onOpenChange={setIsGenerationModalOpen}
+            />
         </div>
     );
 };

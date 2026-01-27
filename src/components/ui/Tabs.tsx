@@ -7,15 +7,26 @@ import { cn } from '@/lib/utils';
 // I'll build a simple accessible Tabs component.
 
 interface TabsProps {
-    defaultValue: string;
+    defaultValue?: string;
+    value?: string;
+    onValueChange?: (value: string) => void;
     className?: string;
     children: React.ReactNode;
 }
 
 const TabsContext = React.createContext<{ value: string; setValue: (v: string) => void } | null>(null);
 
-export function Tabs({ defaultValue, className, children }: TabsProps) {
-    const [value, setValue] = React.useState(defaultValue);
+export function Tabs({ defaultValue, value: controlledValue, onValueChange, className, children }: TabsProps) {
+    const [internalValue, setInternalValue] = React.useState(defaultValue || "");
+
+    const value = controlledValue !== undefined ? controlledValue : internalValue;
+    const setValue = (newValue: string) => {
+        if (controlledValue === undefined) {
+            setInternalValue(newValue);
+        }
+        onValueChange?.(newValue);
+    };
+
     return (
         <TabsContext.Provider value={{ value, setValue }}>
             <div className={cn("", className)}>{children}</div>

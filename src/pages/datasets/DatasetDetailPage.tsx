@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Star, Calendar, Database, FileText, User } from 'lucide-react';
+import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Star, Calendar, Database, User } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 
