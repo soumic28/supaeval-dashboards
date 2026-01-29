@@ -24,7 +24,7 @@ export function useKeyboardShortcut(shortcuts: KeyboardShortcut[]) {
       }
 
       for (const shortcut of shortcuts) {
-        const { key, ctrlKey, shiftKey, altKey, metaKey, callback } = shortcut;
+        const { key, ctrlKey, shiftKey, altKey, callback } = shortcut;
 
         // Key must match (case insensitive)
         const matchesKey = event.key.toLowerCase() === key.toLowerCase();

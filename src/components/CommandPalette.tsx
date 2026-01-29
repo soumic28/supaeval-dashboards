@@ -1,4 +1,3 @@
-import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Search, ArrowRight, Clock, Database, BarChart2, Settings, Play, Hash, FileText, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -148,8 +147,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                                         onClick={() => handleSelect(item)}
                                         onMouseEnter={() => setSelectedIndex(index)}
                                         className={`w-full flex items-center gap-4 px-4 py-3 transition-colors ${isSelected
-                                                ? 'bg-accent'
-                                                : 'hover:bg-accent/50'
+                                            ? 'bg-accent'
+                                            : 'hover:bg-accent/50'
                                             }`}
                                     >
                                         <div className={`p-2.5 rounded-lg transition-colors ${isSelected ? 'bg-primary/20 text-primary' : 'bg-muted'
