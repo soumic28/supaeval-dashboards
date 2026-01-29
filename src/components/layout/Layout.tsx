@@ -1,10 +1,11 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from '../ui/Toaster';
 import { CommandPalette } from '../CommandPalette';
 import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
+import { WelcomeSurvey } from '../WelcomeSurvey';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 
 export function Layout() {
@@ -12,6 +13,22 @@ export function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false);
+
+    // Check if user has completed onboarding on mount
+    useEffect(() => {
+        const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
+        if (!hasCompletedOnboarding) {
+            // Small delay to ensure app loads smoothly before showing dialog
+            const timer = setTimeout(() => setShowWelcome(true), 500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    const handleWelcomeComplete = () => {
+        localStorage.setItem('onboarding_completed', 'true');
+        setShowWelcome(false);
+    };
 
     // Global keyboard shortcuts - work on every page!
     useKeyboardShortcut([
@@ -52,6 +69,12 @@ export function Layout() {
 
     return (
         <>
+            {/* Welcome Survey - shows on first visit */}
+            <WelcomeSurvey
+                open={showWelcome}
+                onComplete={handleWelcomeComplete}
+            />
+
             {/* Global Command Palette - accessible from any page with K key */}
             <CommandPalette
                 open={showCommandPalette}
