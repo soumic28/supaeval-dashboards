@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { CommandPalette } from '@/components/CommandPalette';
+import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 import { Activity, CheckCircle, Clock, ArrowUpRight, ArrowDownRight, Database, Settings, Play, BarChart2, MessageSquare, Code2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -59,6 +60,9 @@ export default function DashboardHome() {
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                     <p className="text-muted-foreground">Overview of your agent performance and evaluation runs.</p>
                 </div>
+
+                {/* Onboarding Checklist - shows when user enables onboarding */}
+                <OnboardingChecklist />
 
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                     {stats.map((stat, index) => (
