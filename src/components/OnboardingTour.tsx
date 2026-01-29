@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TOUR_STEPS, type TourStep } from '@/config/tourSteps';
+import { TOUR_STEPS } from '@/config/tourSteps';
 
 interface OnboardingTourProps {
     show: boolean;
@@ -158,10 +158,10 @@ export function OnboardingTour({ show, onComplete }: OnboardingTourProps) {
                                 <div
                                     key={index}
                                     className={`h-1.5 flex-1 rounded-full transition-colors ${index === currentStep
-                                            ? 'bg-primary'
-                                            : index < currentStep
-                                                ? 'bg-primary/50'
-                                                : 'bg-muted'
+                                        ? 'bg-primary'
+                                        : index < currentStep
+                                            ? 'bg-primary/50'
+                                            : 'bg-muted'
                                         }`}
                                 />
                             ))}
