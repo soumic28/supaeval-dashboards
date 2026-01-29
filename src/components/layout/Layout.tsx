@@ -6,14 +6,18 @@ import { Toaster } from '../ui/Toaster';
 import { CommandPalette } from '../CommandPalette';
 import { KeyboardShortcutsHelp } from '../KeyboardShortcutsHelp';
 import { WelcomeSurvey } from '../WelcomeSurvey';
+import { OnboardingTour } from '../OnboardingTour';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import { useUserProfile } from '@/contexts/UserProfileContext';
 
 export function Layout() {
     const navigate = useNavigate();
+    const { profile } = useUserProfile();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [showTour, setShowTour] = useState(false);
 
     // Check if user has completed onboarding on mount
     useEffect(() => {
@@ -28,6 +32,15 @@ export function Layout() {
     const handleWelcomeComplete = () => {
         localStorage.setItem('onboarding_completed', 'true');
         setShowWelcome(false);
+        // Start tour after welcome survey if onboarding is enabled
+        if (profile.showOnboarding) {
+            setTimeout(() => setShowTour(true), 800);
+        }
+    };
+
+    const handleTourComplete = () => {
+        localStorage.setItem('tour_completed', 'true');
+        setShowTour(false);
     };
 
     // Global keyboard shortcuts - work on every page!
@@ -73,6 +86,12 @@ export function Layout() {
             <WelcomeSurvey
                 open={showWelcome}
                 onComplete={handleWelcomeComplete}
+            />
+
+            {/* Interactive Tour - shows after welcome survey */}
+            <OnboardingTour
+                show={showTour}
+                onComplete={handleTourComplete}
             />
 
             {/* Global Command Palette - accessible from any page with K key */}
