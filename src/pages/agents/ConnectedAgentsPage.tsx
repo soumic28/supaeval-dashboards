@@ -6,10 +6,9 @@ import { Bot, MessageSquare, Activity, Power } from 'lucide-react';
 
 const ConnectedAgentsPage = () => {
     const agents = [
-        { id: 1, name: "Customer Support Bot", type: "Chat", model: "GPT-4", status: "Active", requests: "12.5k", uptime: "99.9%" },
-        { id: 2, name: "Internal QA Agent", type: "RAG", model: "Claude 3", status: "Active", requests: "3.2k", uptime: "99.5%" },
-        { id: 3, name: "Sales Assistant", type: "Chat", model: "GPT-3.5", status: "Offline", requests: "8.1k", uptime: "98.2%" },
-        { id: 4, name: "Code Reviewer", type: "Analysis", model: "DeepSeek", status: "Active", requests: "1.5k", uptime: "99.8%" },
+        { id: 1, name: "Agent X", type: "RAG", model: "GPT-4", status: "Active", requests: "12.5k", uptime: "99.9%" },
+        { id: 2, name: "Agent Y", type: "Chat", model: "Claude 3", status: "Active", requests: "8.2k", uptime: "99.5%" },
+        { id: 3, name: "Agent Z", type: "Analysis", model: "GPT-3.5", status: "Active", requests: "5.1k", uptime: "98.2%" },
     ];
 
     return (

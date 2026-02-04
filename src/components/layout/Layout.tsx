@@ -9,15 +9,24 @@ import { WelcomeSurvey } from '../WelcomeSurvey';
 import { OnboardingTour } from '../OnboardingTour';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { useUserProfile } from '@/contexts/UserProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Layout() {
     const navigate = useNavigate();
+    const { isAuthenticated, isLoading } = useAuth();
     const { profile } = useUserProfile();
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showCommandPalette, setShowCommandPalette] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
     const [showTour, setShowTour] = useState(false);
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            navigate('/login');
+        }
+    }, [isLoading, isAuthenticated, navigate]);
 
     // Check if user has completed onboarding on mount
     useEffect(() => {
@@ -79,6 +88,14 @@ export function Layout() {
             }
         },
     ]);
+
+    if (isLoading) {
+        return <div className="flex h-screen items-center justify-center bg-gray-900 text-white">Loading...</div>;
+    }
+
+    if (!isAuthenticated) {
+        return null; // Will redirect via useEffect
+    }
 
     return (
         <>

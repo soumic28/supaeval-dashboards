@@ -1,34 +1,49 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Star, Calendar, Database, User } from 'lucide-react';
+import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 
 // Mock data for all datasets
 const MOCK_DATASETS: Record<string, any> = {
     // My Datasets (1-100)
-    "1": { title: "Customer Support Logs Q4", desc: "Logs from Q4 customer support interactions.", author: "Me", price: "Private", rating: 4.5, category: "Support", created: "2 days ago", size: "4.2 MB", type: "JSON" },
-    "2": { title: "Product Reviews 2023", desc: "Aggregated product reviews from 2023.", author: "Me", price: "Private", rating: 4.2, category: "Reviews", created: "1 week ago", size: "15.8 MB", type: "CSV" },
-    "3": { title: "Legal Document Corpus", desc: "Collection of legal documents for analysis.", author: "Me", price: "Private", rating: 4.8, category: "Legal", created: "2 weeks ago", size: "128 MB", type: "PDF" },
-    "4": { title: "Medical QA Pairs", desc: "Question-answer pairs from medical forums.", author: "Me", price: "Private", rating: 4.7, category: "Medical", created: "3 weeks ago", size: "2.1 MB", type: "JSON" },
-    "5": { title: "Code Snippets (Python)", desc: "Python code snippets for training.", author: "Me", price: "Private", rating: 4.6, category: "Code", created: "1 month ago", size: "8.4 MB", type: "TXT" },
-    "6": { title: "Red Teaming Prompts", desc: "Prompts designed for red teaming models.", author: "Me", price: "Private", rating: 4.9, category: "Security", created: "1 day ago", size: "1.5 MB", type: "Security" },
-    "7": { title: "GDPR Compliance Set", desc: "Data set for GDPR compliance testing.", author: "Me", price: "Private", rating: 4.5, category: "Compliance", created: "3 days ago", size: "500 KB", type: "Compliance" },
+    "1": {
+        title: "Customer Support Logs Q4",
+        desc: "Logs from Q4 customer support interactions.",
+        author: "Me",
+        price: "Private",
+        rating: 4.5,
+        category: "Support",
+        created: "2 days ago",
+        size: "4.2 MB",
+        type: "JSON",
+        insights: { ambiguity: 80, noise: 50, memoryDepth: 70, toolChains: 60 }
+    },
+    "2": { title: "Product Reviews 2023", desc: "Aggregated product reviews from 2023.", author: "Me", price: "Private", rating: 4.2, category: "Reviews", created: "1 week ago", size: "15.8 MB", type: "CSV", insights: { ambiguity: 65, noise: 40, memoryDepth: 30, toolChains: 20 } },
+    "3": { title: "Legal Document Corpus", desc: "Collection of legal documents for analysis.", author: "Me", price: "Private", rating: 4.8, category: "Legal", created: "2 weeks ago", size: "128 MB", type: "PDF", insights: { ambiguity: 90, noise: 20, memoryDepth: 85, toolChains: 10 } },
+    "4": { title: "Medical QA Pairs", desc: "Question-answer pairs from medical forums.", author: "Me", price: "Private", rating: 4.7, category: "Medical", created: "3 weeks ago", size: "2.1 MB", type: "JSON", insights: { ambiguity: 40, noise: 60, memoryDepth: 50, toolChains: 30 } },
+    "5": { title: "Code Snippets (Python)", desc: "Python code snippets for training.", author: "Me", price: "Private", rating: 4.6, category: "Code", created: "1 month ago", size: "8.4 MB", type: "TXT", insights: { ambiguity: 20, noise: 10, memoryDepth: 40, toolChains: 90 } },
+    "6": { title: "Red Teaming Prompts", desc: "Prompts designed for red teaming models.", author: "Me", price: "Private", rating: 4.9, category: "Security", created: "1 day ago", size: "1.5 MB", type: "Security", insights: { ambiguity: 95, noise: 80, memoryDepth: 60, toolChains: 70 } },
+    "7": { title: "GDPR Compliance Set", desc: "Data set for GDPR compliance testing.", author: "Me", price: "Private", rating: 4.5, category: "Compliance", created: "3 days ago", size: "500 KB", type: "Compliance", insights: { ambiguity: 55, noise: 30, memoryDepth: 20, toolChains: 10 } },
 
     // Marketplace Datasets (201-300)
-    "201": { title: "Common Crawl Subset", desc: "A curated subset of web crawl data for general language modeling.", author: "OpenData", price: "Free", rating: 4.8, category: "Benchmarking", created: "2023-01-15", size: "50 GB", type: "JSON" },
-    "202": { title: "Medical Dialogues", desc: "Doctor-patient conversations annotated with medical entities.", author: "MedCorp", price: "$49", rating: 4.9, category: "Healthcare", created: "2023-03-10", size: "2.5 GB", type: "JSON" },
-    "203": { title: "StackOverflow Code", desc: "High-quality code snippets with accepted answers.", author: "DevCommunity", price: "Free", rating: 4.7, category: "Education", created: "2023-02-20", size: "15 GB", type: "XML" },
-    "204": { title: "Financial News Sentiment", desc: "Headlines labeled with sentiment for market analysis.", author: "FinTech AI", price: "$199", rating: 4.6, category: "Finance", created: "2023-04-05", size: "1.2 GB", type: "JSON" },
-    "205": { title: "Legal Case Summaries", desc: "Summarized court cases for legal NLP tasks.", author: "LegalTech", price: "$99", rating: 4.5, category: "Legal", created: "2023-05-12", size: "850 MB", type: "CSV" },
-    "206": { title: "Customer Support Emails", desc: "Anonymized support threads for intent classification.", author: "SupportAI", price: "Free", rating: 4.4, category: "Benchmarking", created: "2023-06-01", size: "5 GB", type: "JSON" },
-
-    // My Purchases (101-200)
-    "101": { title: "Financial News Sentiment", desc: "Headlines labeled with sentiment for market analysis.", author: "FinTech AI", price: "$199", rating: 4.6, category: "Finance", created: "2023-10-15", size: "1.2 GB", type: "JSON" },
-    "102": { title: "Legal Case Summaries", desc: "Summarized court cases for legal NLP tasks.", author: "LegalTech", price: "$99", rating: 4.5, category: "Legal", created: "2023-11-02", size: "850 MB", type: "CSV" },
-    "103": { title: "Medical Imaging Dataset", desc: "Annotated X-rays and MRI scans for diagnostic AI.", author: "MedAI Labs", price: "$299", rating: 4.9, category: "Healthcare", created: "2023-12-10", size: "45 GB", type: "DICOM" }
+    "201": { title: "Common Crawl Subset", desc: "A curated subset of web crawl data for general language modeling.", author: "OpenData", price: "Free", rating: 4.8, category: "Benchmarking", created: "2023-01-15", size: "50 GB", type: "JSON", insights: { ambiguity: 75, noise: 85, memoryDepth: 40, toolChains: 0 } },
+    // ... maps to defaults for others if needed
 };
+
+const InsightBar = ({ label, value }: { label: string, value: number }) => (
+    <div className="grid grid-cols-[120px_1fr_50px] items-center gap-4">
+        <div className="font-medium text-sm text-muted-foreground text-right">{label}</div>
+        <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
+            <div
+                className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${value}%` }}
+            />
+        </div>
+        <div className="text-sm font-medium text-right">{value}%</div>
+    </div>
+);
 
 const DatasetDetailPage = () => {
     const { id } = useParams();
@@ -45,17 +60,19 @@ const DatasetDetailPage = () => {
         category: "Unknown",
         created: "Unknown",
         size: "Unknown",
-        type: "Unknown"
+        type: "Unknown",
+        insights: { ambiguity: 50, noise: 50, memoryDepth: 50, toolChains: 50 }
     };
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const insights = datasetInfo.insights || { ambiguity: 50, noise: 50, memoryDepth: 50, toolChains: 50 };
 
-    // Generate mock prompts based on category/type
-    const prompts = useMemo(() => {
+    const [prompts, setPrompts] = useState<{ id: string; prompt: string; completion: string; complexity: string; category: string; created: string; reviewed: boolean; }[]>([]);
+
+    // Initialize prompts only once or when ID changes
+    useMemo(() => {
         const category = datasetInfo.category || "General";
         const count = 50;
-        return Array.from({ length: count }, (_, i) => {
+        const newPrompts = Array.from({ length: count }, (_, i) => {
             let promptText = "";
             let completionText = "";
 
@@ -82,10 +99,27 @@ const DatasetDetailPage = () => {
                 completion: completionText,
                 complexity: ['L0', 'L1', 'L2'][i % 3],
                 category: category,
-                created: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toLocaleDateString()
+                created: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toLocaleDateString(),
+                reviewed: Math.random() > 0.7 // 30% chance of being already reviewed
             };
         });
+        setPrompts(newPrompts);
     }, [datasetInfo.category]);
+
+    const [editingPrompt, setEditingPrompt] = useState<any>(null);
+    const [deletingPromptId, setDeletingPromptId] = useState<string | null>(null);
+    const [reviewingPrompt, setReviewingPrompt] = useState<any>(null);
+    const [isEditPromptOpen, setIsEditPromptOpen] = useState(false);
+    const [isDeletePromptOpen, setIsDeletePromptOpen] = useState(false);
+    const [isReviewPromptOpen, setIsReviewPromptOpen] = useState(false);
+
+    const [newPrompt, setNewPrompt] = useState({ prompt: "", completion: "", complexity: "L0", category: "General" });
+    const [isAddPromptOpen, setIsAddPromptOpen] = useState(false);
+
+    // Filter prompts logic would need to apply to state `prompts` now
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const totalPages = Math.ceil(prompts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -103,8 +137,60 @@ const DatasetDetailPage = () => {
         }
     };
 
+    const handleEditClick = (prompt: any) => {
+        setEditingPrompt({ ...prompt });
+        setIsEditPromptOpen(true);
+    };
+
+    const handleDeleteClick = (id: string) => {
+        setDeletingPromptId(id);
+        setIsDeletePromptOpen(true);
+    };
+
+    const handleReviewClick = (prompt: any) => {
+        setReviewingPrompt({ ...prompt });
+        setIsReviewPromptOpen(true);
+    };
+
+    const savePromptEdit = () => {
+        if (editingPrompt) {
+            setPrompts(prompts.map(p => p.id === editingPrompt.id ? editingPrompt : p));
+            setIsEditPromptOpen(false);
+            setEditingPrompt(null);
+        }
+    };
+
+    const confirmDeletePrompt = () => {
+        if (deletingPromptId) {
+            setPrompts(prompts.filter(p => p.id !== deletingPromptId));
+            setIsDeletePromptOpen(false);
+            setDeletingPromptId(null);
+        }
+    };
+
+    const markAsReviewed = () => {
+        if (reviewingPrompt) {
+            setPrompts(prompts.map(p => p.id === reviewingPrompt.id ? { ...p, reviewed: true } : p));
+            setIsReviewPromptOpen(false);
+            setReviewingPrompt(null);
+        }
+    };
+
+    const handleAddPrompt = () => {
+        const promptToAdd = {
+            id: `P-${Date.now()}`,
+            ...newPrompt,
+            created: new Date().toLocaleDateString(),
+            reviewed: false
+        };
+        setPrompts([promptToAdd, ...prompts]);
+        setIsAddPromptOpen(false);
+        setNewPrompt({ prompt: "", completion: "", complexity: "L0", category: "General" });
+    };
+
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-[1200px] mx-auto">
             {/* Header Section */}
             <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-4">
@@ -125,51 +211,28 @@ const DatasetDetailPage = () => {
                         <p className="text-muted-foreground mt-1">{datasetInfo.desc}</p>
                     </div>
                     <div className="flex gap-2">
+                        <Button variant="outline" size="icon" title="Edit Dataset">
+                            <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" title="Delete Dataset" className="hover:text-red-600 hover:border-red-200 hover:bg-red-50">
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
                         <Button variant="outline">
                             <Download className="w-4 h-4 mr-2" />
                             Export
                         </Button>
-                        <Button>Add Prompt</Button>
+                        <Button onClick={() => setIsAddPromptOpen(true)}>Add Prompt</Button>
                     </div>
                 </div>
 
-                {/* Metadata Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-card p-4 rounded-lg border flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full text-primary">
-                            <User className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Author</p>
-                            <p className="font-medium text-sm">{datasetInfo.author}</p>
-                        </div>
-                    </div>
-                    <div className="bg-card p-4 rounded-lg border flex items-center gap-3">
-                        <div className="p-2 bg-yellow-500/10 rounded-full text-yellow-500">
-                            <Star className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Rating</p>
-                            <p className="font-medium text-sm">{datasetInfo.rating} / 5.0</p>
-                        </div>
-                    </div>
-                    <div className="bg-card p-4 rounded-lg border flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/10 rounded-full text-blue-500">
-                            <Database className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Size</p>
-                            <p className="font-medium text-sm">{datasetInfo.size}</p>
-                        </div>
-                    </div>
-                    <div className="bg-card p-4 rounded-lg border flex items-center gap-3">
-                        <div className="p-2 bg-green-500/10 rounded-full text-green-500">
-                            <Calendar className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Created</p>
-                            <p className="font-medium text-sm">{datasetInfo.created}</p>
-                        </div>
+                {/* Insights Section */}
+                <div className="bg-card p-6 rounded-lg border">
+                    <h3 className="text-lg font-semibold mb-6 tracking-tight">Dataset Insights</h3>
+                    <div className="max-w-md space-y-4">
+                        <InsightBar label="Ambiguity" value={insights.ambiguity} />
+                        <InsightBar label="Noise" value={insights.noise} />
+                        <InsightBar label="Memory Depth" value={insights.memoryDepth} />
+                        <InsightBar label="Tool Chains" value={insights.toolChains} />
                     </div>
                 </div>
             </div>
@@ -196,11 +259,13 @@ const DatasetDetailPage = () => {
                         <thead className="bg-muted/50 text-muted-foreground font-medium">
                             <tr>
                                 <th className="px-6 py-3">ID</th>
-                                <th className="px-6 py-3 w-1/3">Prompt</th>
-                                <th className="px-6 py-3 w-1/3">Completion</th>
+                                <th className="px-6 py-3 w-1/4">Prompt</th>
+                                <th className="px-6 py-3 w-1/4">Completion</th>
                                 <th className="px-6 py-3">Complexity</th>
                                 <th className="px-6 py-3">Category</th>
+                                <th className="px-6 py-3 text-center">Humanly Reviewed</th>
                                 <th className="px-6 py-3">Created</th>
+                                <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -219,7 +284,31 @@ const DatasetDetailPage = () => {
                                         </Badge>
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground">{item.category}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        {item.reviewed ? (
+                                            <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                            </div>
+                                        ) : (
+                                            <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 text-muted-foreground">{item.created}</td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleReviewClick(item)} title="Review Prompt">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}>
+                                                <Edit className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(item.id)}>
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -245,6 +334,175 @@ const DatasetDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Prompt Modal */}
+            {isEditPromptOpen && editingPrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-lg border rounded-lg shadow-lg p-6 space-y-4">
+                        <h2 className="text-lg font-semibold">Edit Prompt</h2>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Prompt Text</label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={editingPrompt.prompt}
+                                    onChange={(e) => setEditingPrompt({ ...editingPrompt, prompt: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Completion</label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={editingPrompt.completion}
+                                    onChange={(e) => setEditingPrompt({ ...editingPrompt, completion: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Complexity</label>
+                                    <select
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={editingPrompt.complexity}
+                                        onChange={(e) => setEditingPrompt({ ...editingPrompt, complexity: e.target.value })}
+                                    >
+                                        <option value="L0">L0</option>
+                                        <option value="L1">L1</option>
+                                        <option value="L2">L2</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Category</label>
+                                    <Input
+                                        value={editingPrompt.category}
+                                        onChange={(e) => setEditingPrompt({ ...editingPrompt, category: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setIsEditPromptOpen(false)}>Cancel</Button>
+                            <Button onClick={savePromptEdit}>Save Changes</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Prompt Modal */}
+            {isAddPromptOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-lg border rounded-lg shadow-lg p-6 space-y-4">
+                        <h2 className="text-lg font-semibold">Add New Prompt</h2>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Prompt Text</label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={newPrompt.prompt}
+                                    onChange={(e) => setNewPrompt({ ...newPrompt, prompt: e.target.value })}
+                                    placeholder="Enter prompt text here..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Completion</label>
+                                <textarea
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={newPrompt.completion}
+                                    onChange={(e) => setNewPrompt({ ...newPrompt, completion: e.target.value })}
+                                    placeholder="Enter expected completion..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Complexity</label>
+                                    <select
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={newPrompt.complexity}
+                                        onChange={(e) => setNewPrompt({ ...newPrompt, complexity: e.target.value })}
+                                    >
+                                        <option value="L0">L0</option>
+                                        <option value="L1">L1</option>
+                                        <option value="L2">L2</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Category</label>
+                                    <Input
+                                        value={newPrompt.category}
+                                        onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
+                                        placeholder="e.g. Healthcare"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setIsAddPromptOpen(false)}>Cancel</Button>
+                            <Button onClick={handleAddPrompt}>Add Prompt</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Human Review Modal */}
+            {isReviewPromptOpen && reviewingPrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-2xl border rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b">
+                            <h2 className="text-lg font-semibold">Human Review</h2>
+                            <p className="text-sm text-muted-foreground">Review the prompt and completion for quality and accuracy.</p>
+                        </div>
+
+                        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Prompt</h3>
+                                <div className="p-4 bg-muted/30 rounded-lg border text-sm leading-relaxed">
+                                    {reviewingPrompt.prompt}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Completion</h3>
+                                <div className="p-4 bg-muted/30 rounded-lg border text-sm leading-relaxed">
+                                    {reviewingPrompt.completion}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 border rounded bg-card">
+                                    <span className="text-xs text-muted-foreground block mb-1">Complexity</span>
+                                    <Badge variant="outline">{reviewingPrompt.complexity}</Badge>
+                                </div>
+                                <div className="p-3 border rounded bg-card">
+                                    <span className="text-xs text-muted-foreground block mb-1">Category</span>
+                                    <span className="font-medium text-sm">{reviewingPrompt.category}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t bg-muted/10 flex justify-between items-center">
+                            <Button variant="outline" onClick={() => setIsReviewPromptOpen(false)}>Close</Button>
+                            <div className="flex gap-2">
+                                <Button variant="destructive" onClick={() => setIsReviewPromptOpen(false)}>Reject</Button>
+                                <Button onClick={markAsReviewed} className="bg-green-600 hover:bg-green-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><polyline points="20 6 9 17 4 12" /></svg>
+                                    Approve & Mark Humanly Reviewed
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Prompt Confirmation Modal */}
+            {isDeletePromptOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md border rounded-lg shadow-lg p-6 space-y-4">
+                        <h2 className="text-lg font-semibold">Delete Prompt</h2>
+                        <p className="text-muted-foreground">Are you sure you want to delete this prompt? This action cannot be undone.</p>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setIsDeletePromptOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmDeletePrompt}>Delete</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

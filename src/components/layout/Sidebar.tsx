@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     LayoutDashboard,
     Database,
@@ -12,7 +13,8 @@ import {
     Users,
     Bot,
     RefreshCw,
-    LineChart
+    LineChart,
+    LogOut
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -79,6 +81,7 @@ const bottomNavItems: NavItem[] = [
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const { logout } = useAuth();
     const location = useLocation();
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         'Datasets': true,
@@ -211,10 +214,19 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                                 )
                             }
                         >
-                            <item.icon className="w-4 h-4" />
                             <span>{item.name}</span>
                         </NavLink>
                     ))}
+                    <button
+                        onClick={() => {
+                            logout();
+                            onClose();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                    </button>
                 </div>
             </div>
         </>
