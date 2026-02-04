@@ -1,0 +1,59 @@
+# Node.js with React
+# Build a Node.js project that uses React.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: terraform-vars
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm ci
+    npm run build
+  displayName: 'Install deps and build'
+
+- task: AzureCLI@2
+  displayName: 'Azure CLI Login'
+  inputs:
+    azureSubscription: 'SupaEvalServiceConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Authenticated Azure CLI"
+      az account show
+
+- task: AzureCLI@2
+  displayName: 'Deploy to Azure Static Web App'
+  inputs:
+    azureSubscription: 'SupaEvalServiceConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      set -euo pipefail
+      APP_NAME="$(static_site_name)"
+      RG_NAME="$(resource_group_name)"
+      if [ -z "$APP_NAME" ]; then
+        echo "static_site_name variable is not set. Ensure variable group 'terraform-vars' provides it."
+        exit 1
+      fi
+      echo "Fetching deployment token for Static Web App: $APP_NAME (RG: $RG_NAME)"
+      TOKEN=$(az staticwebapp secrets list --name "$APP_NAME" --resource-group "$RG_NAME" --query properties.apiKey -o tsv)
+      if [ -z "$TOKEN" ]; then
+        echo "Failed to retrieve deployment token. Check the Static Web App exists and your service connection has access."
+        exit 1
+      fi
+      echo "Installing Static Web Apps CLI"
+      npm i -g @azure/static-web-apps-cli
+      echo "Deploying build output from ./dist to Static Web App"
+      swa deploy ./dist --env production --deployment-token "$TOKEN"

@@ -18,7 +18,7 @@ export default function DatasetsPage() {
     ];
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 p-8 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Datasets</h1>
