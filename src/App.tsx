@@ -39,6 +39,14 @@ import MetricsPage from './pages/MetricsPage';
 import SettingsPage from './pages/SettingsPage';
 import TeamPage from './pages/TeamPage';
 
+// Resources
+import CostAnalysisPage from './pages/resources/CostAnalysisPage';
+import PricingTierPage from './pages/resources/PricingTierPage';
+import UsageManagementPage from './pages/resources/UsageManagementPage';
+
+// Onboarding
+import OnboardingPage from './pages/onboarding/OnboardingPage';
+
 function App() {
   return (
     <BrowserRouter>
@@ -88,6 +96,13 @@ function App() {
               <Route path="/sdk" element={<SDKPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/team" element={<TeamPage />} />
+
+              {/* Resources */}
+              <Route path="/resources/cost-analysis" element={<CostAnalysisPage />} />
+              <Route path="/resources/pricing-tier" element={<PricingTierPage />} />
+              <Route path="/resources/usage-management" element={<UsageManagementPage />} />
+
+              <Route path="/onboarding" element={<OnboardingPage />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

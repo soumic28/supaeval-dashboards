@@ -28,6 +28,13 @@ export function Layout() {
         }
     }, [isLoading, isAuthenticated, navigate]);
 
+    // Redirect to new onboarding flow if enabled
+    useEffect(() => {
+        if (profile.showOnboarding) {
+            navigate('/onboarding');
+        }
+    }, [profile.showOnboarding, navigate]);
+
     // Check if user has completed onboarding on mount
     useEffect(() => {
         const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');

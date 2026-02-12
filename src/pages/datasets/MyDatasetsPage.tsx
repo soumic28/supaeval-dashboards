@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Search, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +24,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/Dialog";
+import { NewRunModal } from '@/components/evaluations/NewRunModal';
 
 interface Dataset {
     id: number;
@@ -73,6 +74,7 @@ const MyDatasetsPage = () => {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
     const [uploadData, setUploadData] = useState({
         name: '',
@@ -243,6 +245,18 @@ const MyDatasetsPage = () => {
                                 <TableCell>{dataset.persona}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 text-amber-500 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 mr-1 rounded-full p-2"
+                                            title="Run New Eval"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsRunModalOpen(true);
+                                            }}
+                                        >
+                                            <Zap className="w-4 h-4 fill-current" />
+                                        </Button>
                                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={(e) => handleReviewClick(e, dataset)} title="Review">
                                             <Eye className="h-4 w-4 text-blue-600" />
                                         </Button>
@@ -461,6 +475,8 @@ const MyDatasetsPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <NewRunModal open={isRunModalOpen} onOpenChange={setIsRunModalOpen} />
         </div >
     );
 };

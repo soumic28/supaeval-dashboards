@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
 import { AlertCircle, Loader2, Check, Terminal, Cpu, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ModeToggle } from '@/components/ModeToggle';
 
 export default function SignupPage() {
     const navigate = useNavigate();
@@ -64,7 +65,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen grid lg:grid-cols-2 bg-[#0A0A0B] font-mono selection:bg-indigo-500/30">
+        <div className="min-h-screen grid lg:grid-cols-2 bg-background font-mono selection:bg-primary/30">
             {/* Left Side - Hero/Branding */}
             <div className="hidden lg:flex flex-col justify-between bg-[#050506] p-12 text-white relative overflow-hidden border-r border-[#1F1F23]">
                 {/* Tech Background Pattern */}
@@ -86,10 +87,10 @@ export default function SignupPage() {
                         transition={{ delay: 0.2 }}
                     >
                         <h1 className="text-4xl font-bold tracking-tight mb-4">
-                            New_User_Registration
+                            Create Account
                         </h1>
                         <p className="text-lg text-zinc-400 leading-relaxed border-l-2 border-indigo-500/50 pl-4">
-                            Initialize new user profile to access advanced agent evaluation systems and collaborative debugging environments.
+                            Join us to start building better AI agents with advanced evaluation tools.
                         </p>
                     </motion.div>
 
@@ -136,7 +137,7 @@ export default function SignupPage() {
                                 >
                                     <Cpu className="w-4 h-4" />
                                 </motion.div>
-                                <span className="text-xs uppercase tracking-wider">Team_Sync</span>
+                                <span className="text-xs uppercase tracking-wider">Team Sync</span>
                             </div>
                             <div className="text-2xl font-bold text-white relative z-10">Enabled</div>
                         </motion.div>
@@ -146,7 +147,7 @@ export default function SignupPage() {
                         >
                             <div className="flex items-center gap-2 text-zinc-400 mb-2">
                                 <Terminal className="w-4 h-4" />
-                                <span className="text-xs uppercase tracking-wider">Access_Level</span>
+                                <span className="text-xs uppercase tracking-wider">Access Level</span>
                             </div>
                             <div className="text-2xl font-bold text-white flex items-center gap-2">
                                 Full
@@ -167,18 +168,21 @@ export default function SignupPage() {
             </div>
 
             {/* Right Side - Signup Form */}
-            <div className="flex items-center justify-center p-8 bg-[#0A0A0B]">
+            <div className="flex items-center justify-center p-8 bg-background relative">
+                <div className="absolute top-4 right-4">
+                    <ModeToggle />
+                </div>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full max-w-md space-y-8"
                 >
                     <div className="text-center lg:text-left space-y-2">
-                        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <span className="text-indigo-500">{'>'}</span> New_User
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                            Create Account
                         </h2>
-                        <p className="text-sm text-zinc-400">
-                            Create credentials to initialize session
+                        <p className="text-sm text-muted-foreground">
+                            Enter your details below to create your account
                         </p>
                     </div>
 
@@ -186,11 +190,11 @@ export default function SignupPage() {
                         <div className="space-y-5">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2 text-left">
-                                    <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-zinc-500">First_Name</Label>
+                                    <Label htmlFor="firstName" className="text-xs uppercase tracking-wider text-muted-foreground">First Name</Label>
                                     <Input
                                         id="firstName"
                                         placeholder="John"
-                                        className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.firstName ? "border-red-500/50" : ""}`}
+                                        className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.firstName ? "border-red-500/50" : ""}`}
                                         {...register("firstName", { required: "Required" })}
                                     />
                                     {errors.firstName && (
@@ -201,11 +205,11 @@ export default function SignupPage() {
                                     )}
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-zinc-500">Last_Name</Label>
+                                    <Label htmlFor="lastName" className="text-xs uppercase tracking-wider text-muted-foreground">Last Name</Label>
                                     <Input
                                         id="lastName"
                                         placeholder="Doe"
-                                        className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.lastName ? "border-red-500/50" : ""}`}
+                                        className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.lastName ? "border-red-500/50" : ""}`}
                                         {...register("lastName", { required: "Required" })}
                                     />
                                     {errors.lastName && (
@@ -219,11 +223,11 @@ export default function SignupPage() {
 
                             <div className="space-y-5">
                                 <div className="space-y-2 text-left">
-                                    <Label htmlFor="companyName" className="text-xs uppercase tracking-wider text-zinc-500">Company_Name</Label>
+                                    <Label htmlFor="companyName" className="text-xs uppercase tracking-wider text-muted-foreground">Company Name</Label>
                                     <Input
                                         id="companyName"
                                         placeholder="Acme Corp"
-                                        className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.companyName ? "border-red-500/50" : ""}`}
+                                        className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.companyName ? "border-red-500/50" : ""}`}
                                         {...register("companyName", { required: "Company Name is required" })}
                                     />
                                     {errors.companyName && (
@@ -236,13 +240,13 @@ export default function SignupPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2 text-left">
-                                        <Label htmlFor="seats" className="text-xs uppercase tracking-wider text-zinc-500">Number_of_Seats</Label>
+                                        <Label htmlFor="seats" className="text-xs uppercase tracking-wider text-muted-foreground">Number of Seats</Label>
                                         <Input
                                             id="seats"
                                             type="number"
                                             placeholder="1"
                                             min="1"
-                                            className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.seats ? "border-red-500/50" : ""}`}
+                                            className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.seats ? "border-red-500/50" : ""}`}
                                             {...register("seats", {
                                                 required: "Number of seats is required",
                                                 min: { value: 1, message: "At least 1 seat required" }
@@ -256,16 +260,16 @@ export default function SignupPage() {
                                         )}
                                     </div>
                                     <div className="space-y-2 text-left">
-                                        <Label htmlFor="subscriptionType" className="text-xs uppercase tracking-wider text-zinc-500">Subscription_Type</Label>
+                                        <Label htmlFor="subscriptionType" className="text-xs uppercase tracking-wider text-muted-foreground">Subscription Type</Label>
                                         <Select
                                             id="subscriptionType"
-                                            className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.subscriptionType ? "border-red-500/50" : ""}`}
+                                            className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.subscriptionType ? "border-red-500/50" : ""}`}
                                             {...register("subscriptionType", { required: "Subscription Type is required" })}
                                         >
-                                            <option value="" disabled selected className="bg-[#0F0F11]">Select Type</option>
-                                            <option value="free" className="bg-[#0F0F11]">Free</option>
-                                            <option value="trial" className="bg-[#0F0F11]">Trial</option>
-                                            <option value="enterprise" className="bg-[#0F0F11]">Enterprise</option>
+                                            <option value="" disabled selected className="bg-background">Select Type</option>
+                                            <option value="free" className="bg-background">Free</option>
+                                            <option value="trial" className="bg-background">Trial</option>
+                                            <option value="enterprise" className="bg-background">Enterprise</option>
                                         </Select>
                                         {errors.subscriptionType && (
                                             <p className="text-xs text-red-500/80 flex items-center gap-1 mt-1">
@@ -278,12 +282,12 @@ export default function SignupPage() {
                             </div>
 
                             <div className="space-y-2 text-left">
-                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-zinc-500">Email_Address</Label>
+                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">Email Address</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     placeholder="user@organization.com"
-                                    className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.email ? "border-red-500/50" : ""}`}
+                                    className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.email ? "border-red-500/50" : ""}`}
                                     {...register("email", {
                                         required: "Email is required",
                                         pattern: { value: /^\S+@\S+$/i, message: "Invalid email" }
@@ -298,13 +302,13 @@ export default function SignupPage() {
                             </div>
 
                             <div className="space-y-2 text-left">
-                                <Label htmlFor="password" className="text-xs uppercase tracking-wider text-zinc-500">Access_Key</Label>
+                                <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground">Password</Label>
                                 <div className="relative">
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all pr-10 ${errors.password ? "border-red-500/50" : ""}`}
+                                        className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all pr-10 ${errors.password ? "border-red-500/50" : ""}`}
                                         {...register("password", {
                                             required: "Password is required",
                                             minLength: { value: 8, message: "Must be at least 8 characters" }
@@ -313,7 +317,7 @@ export default function SignupPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -354,15 +358,15 @@ export default function SignupPage() {
                             ) : success ? (
                                 "Success"
                             ) : (
-                                "Create_Account"
+                                "Sign Up"
                             )}
                         </Button>
                     </form>
 
-                    <div className="text-center text-xs text-zinc-500">
-                        Existing_User?{" "}
+                    <div className="text-center text-xs text-muted-foreground">
+                        Already have an account?{" "}
                         <Link to="/login" className="text-indigo-500 hover:text-indigo-400 transition-colors">
-                            Authenticate
+                            Sign in
                         </Link>
                     </div>
                 </motion.div>

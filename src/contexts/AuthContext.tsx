@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { User } from "@/types/models";
+import { authService } from "@/services/auth";
+import type { User, AuthResponse } from "@/types/models";
 
 interface AuthContextType {
     user: User | null;
@@ -12,15 +13,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock user data for demo purposes
-const MOCK_USER: User = {
-    id: "mock-user-123",
-    email: "demo@supaeval.com",
-    name: "Demo User",
-    role: "admin",
-    created_at: new Date().toISOString(),
-};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
@@ -50,24 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (credentials: { email: string; password?: string }) => {
         setIsLoading(true);
         try {
-            // Simulate network delay for realism
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const response = await authService.login(credentials);
+            // The API response is directly the AuthResponse object (interceptors handle .data)
+            const data = response as unknown as AuthResponse;
 
-            // Mock successful login
-            const mockToken = "mock-jwt-token-" + Date.now();
+            if (data.access_token) {
+                localStorage.setItem("auth_token", data.access_token);
+                setToken(data.access_token);
 
-            // Use the credential email if provided, otherwise default to mock user email
-            const loggedInUser = {
-                ...MOCK_USER,
-                email: credentials.email || MOCK_USER.email
-            };
-
-            localStorage.setItem("auth_token", mockToken);
-            localStorage.setItem("auth_user", JSON.stringify(loggedInUser));
-
-            setToken(mockToken);
-            setUser(loggedInUser);
-
+                // Setup user if returned, otherwise we might need to fetch profile
+                if (data.user) {
+                    localStorage.setItem("auth_user", JSON.stringify(data.user));
+                    setUser(data.user);
+                }
+            }
         } catch (error) {
             console.error("Login failed", error);
             throw error;
@@ -78,8 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         try {
-            // No backend call needed for mock auth
-            // await authService.logout(); 
+            await authService.logout();
         } catch (error) {
             console.error("Logout failed", error);
         } finally {
