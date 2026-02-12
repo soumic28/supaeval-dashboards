@@ -14,7 +14,8 @@ import {
     Bot,
     RefreshCw,
     LineChart,
-    LogOut
+    LogOut,
+    PieChart
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -73,6 +74,15 @@ const navItems: NavItem[] = [
     },
     { name: 'RLHF', icon: RefreshCw, path: '/rlhf' },
     { name: 'SDK & API', icon: Code2, path: '/sdk' },
+    {
+        name: 'Resource Management',
+        icon: PieChart,
+        children: [
+            { name: 'Cost Analysis', path: '/resources/cost-analysis' },
+            { name: 'Pricing Tier', path: '/resources/pricing-tier' },
+            { name: 'Usage Management', path: '/resources/usage-management' },
+        ]
+    },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -88,7 +98,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         'Evaluations': true,
         'Configurations': true,
         'Benchmarks': true,
-        'Agents': true
+        'Agents': true,
+        'Resource Management': true
     });
 
     const toggleSection = (name: string) => {

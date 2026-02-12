@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/Label';
 // import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { AlertCircle, Loader2, Eye, EyeOff, Terminal, Cpu } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ModeToggle } from '@/components/ModeToggle';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -60,7 +61,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen grid lg:grid-cols-2 bg-[#0A0A0B] font-mono selection:bg-indigo-500/30">
+        <div className="min-h-screen grid lg:grid-cols-2 bg-background font-mono selection:bg-primary/30">
             {/* Left Side - Hero/Branding */}
             <div className="hidden lg:flex flex-col justify-between bg-[#050506] p-12 text-white relative overflow-hidden border-r border-[#1F1F23]">
                 {/* Tech Background Pattern */}
@@ -82,10 +83,10 @@ export default function LoginPage() {
                         transition={{ delay: 0.2 }}
                     >
                         <h1 className="text-4xl font-bold tracking-tight mb-4">
-                            System_Access
+                            Welcome Back
                         </h1>
                         <p className="text-lg text-zinc-400 leading-relaxed border-l-2 border-indigo-500/50 pl-4">
-                            Initialize authentication sequence to access agent evaluation telemetry and debugging interfaces.
+                            Sign in to access your agent evaluation dashboard.
                         </p>
                     </motion.div>
 
@@ -132,7 +133,7 @@ export default function LoginPage() {
                                 >
                                     <Cpu className="w-4 h-4" />
                                 </motion.div>
-                                <span className="text-xs uppercase tracking-wider">Metric_Analysis</span>
+                                <span className="text-xs uppercase tracking-wider">Metric Analysis</span>
                             </div>
                             <div className="text-2xl font-bold text-white relative z-10">Real-time</div>
                         </motion.div>
@@ -142,7 +143,7 @@ export default function LoginPage() {
                         >
                             <div className="flex items-center gap-2 text-zinc-400 mb-2">
                                 <Terminal className="w-4 h-4" />
-                                <span className="text-xs uppercase tracking-wider">Debug_Mode</span>
+                                <span className="text-xs uppercase tracking-wider">Debug Mode</span>
                             </div>
                             <div className="text-2xl font-bold text-white flex items-center gap-2">
                                 Active
@@ -163,30 +164,33 @@ export default function LoginPage() {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="flex items-center justify-center p-8 bg-[#0A0A0B]">
+            <div className="flex items-center justify-center p-8 bg-background relative">
+                <div className="absolute top-4 right-4">
+                    <ModeToggle />
+                </div>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full max-w-md space-y-8"
                 >
                     <div className="text-center lg:text-left space-y-2">
-                        <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <span className="text-indigo-500">{'>'}</span> Return_User
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                            Sign In
                         </h2>
-                        <p className="text-sm text-zinc-400">
-                            Enter credentials to authorize session
+                        <p className="text-sm text-muted-foreground">
+                            Enter your email and password to access your account
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="space-y-5">
                             <div className="space-y-2 text-left">
-                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-zinc-500">Email_Address</Label>
+                                <Label htmlFor="email" className="text-xs uppercase tracking-wider text-muted-foreground">Email Address</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     placeholder="user@organization.com"
-                                    className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.email ? "border-red-500/50" : ""}`}
+                                    className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all ${errors.email ? "border-red-500/50" : ""}`}
                                     {...register("email", { required: "Email is required" })}
                                 />
                                 {errors.email && (
@@ -199,12 +203,12 @@ export default function LoginPage() {
 
                             <div className="space-y-2 text-left">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="password" className="text-xs uppercase tracking-wider text-zinc-500">Access_Key</Label>
+                                    <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground">Password</Label>
                                     <Link
                                         to="/forgot-password"
                                         className="text-xs text-indigo-500 hover:text-indigo-400 transition-colors"
                                     >
-                                        Recover_Key?
+                                        Forgot Password?
                                     </Link>
                                 </div>
                                 <div className="relative">
@@ -212,13 +216,13 @@ export default function LoginPage() {
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className={`bg-[#0F0F11] border-[#1F1F23] text-zinc-300 placeholder:text-zinc-700 focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all pr-10 ${errors.password ? "border-red-500/50" : ""}`}
+                                        className={`bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all pr-10 ${errors.password ? "border-red-500/50" : ""}`}
                                         {...register("password", { required: "Password is required" })}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -247,18 +251,18 @@ export default function LoginPage() {
                             {isSubmitting ? (
                                 <div className="flex items-center gap-2">
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Authorizing...</span>
+                                    <span>Signing In...</span>
                                 </div>
                             ) : (
-                                "Authenticate"
+                                "Sign In"
                             )}
                         </Button>
                     </form>
 
-                    <div className="text-center text-xs text-zinc-500">
-                        New_User?{" "}
+                    <div className="text-center text-xs text-muted-foreground">
+                        Don't have an account?{" "}
                         <Link to="/signup" className="text-indigo-500 hover:text-indigo-400 transition-colors">
-                            Initialize_Account
+                            Sign Up
                         </Link>
                     </div>
                 </motion.div>

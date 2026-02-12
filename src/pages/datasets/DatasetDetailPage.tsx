@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { TraceDetailModal } from './components/TraceDetailModal';
 
 // Mock data for all datasets
 const MOCK_DATASETS: Record<string, any> = {
@@ -115,6 +116,9 @@ const DatasetDetailPage = () => {
 
     const [newPrompt, setNewPrompt] = useState({ prompt: "", completion: "", complexity: "L0", category: "General" });
     const [isAddPromptOpen, setIsAddPromptOpen] = useState(false);
+
+    // Trace View State
+    const [viewingTraceId, setViewingTraceId] = useState<string | null>(null);
 
     // Filter prompts logic would need to apply to state `prompts` now
 
@@ -270,7 +274,11 @@ const DatasetDetailPage = () => {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {currentPrompts.map((item) => (
-                                <tr key={item.id} className="hover:bg-muted/50 transition-colors">
+                                <tr
+                                    key={item.id}
+                                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                                    onClick={() => setViewingTraceId(item.id)}
+                                >
                                     <td className="px-6 py-4 font-mono text-xs">{item.id}</td>
                                     <td className="px-6 py-4">
                                         <p className="line-clamp-2" title={item.prompt}>{item.prompt}</p>
@@ -297,16 +305,26 @@ const DatasetDetailPage = () => {
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground">{item.created}</td>
                                     <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleReviewClick(item)} title="Review Prompt">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(item)}>
-                                                <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteClick(item.id)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <div className="flex justify-end gap-1 border-r pr-3 mr-1 border-border/50">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(item); }}
+                                                    title="Review Prompt"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8"
+                                                    onClick={(e) => { e.stopPropagation(); handleEditClick(item); }}
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteClick(item.id); }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />
                                         </div>
                                     </td>
                                 </tr>
@@ -503,6 +521,12 @@ const DatasetDetailPage = () => {
                     </div>
                 </div>
             )}
+
+            <TraceDetailModal
+                isOpen={!!viewingTraceId}
+                onClose={() => setViewingTraceId(null)}
+                promptId={viewingTraceId}
+            />
         </div>
     );
 };
