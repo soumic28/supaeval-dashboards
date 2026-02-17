@@ -14,10 +14,10 @@ import {
     Bot,
     RefreshCw,
     LineChart,
-    LogOut,
-    PieChart
+    LogOut
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { WorkspaceSelector } from '@/components/workspaces/WorkspaceSelector';
 
 interface NavItem {
     name: string;
@@ -74,15 +74,6 @@ const navItems: NavItem[] = [
     },
     { name: 'RLHF', icon: RefreshCw, path: '/rlhf' },
     { name: 'SDK & API', icon: Code2, path: '/sdk' },
-    {
-        name: 'Resource Management',
-        icon: PieChart,
-        children: [
-            { name: 'Cost Analysis', path: '/resources/cost-analysis' },
-            { name: 'Pricing Tier', path: '/resources/pricing-tier' },
-            { name: 'Usage Management', path: '/resources/usage-management' },
-        ]
-    },
 ];
 
 const bottomNavItems: NavItem[] = [
@@ -98,8 +89,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         'Evaluations': true,
         'Configurations': true,
         'Benchmarks': true,
-        'Agents': true,
-        'Resource Management': true
+        'Agents': true
     });
 
     const toggleSection = (name: string) => {
@@ -197,11 +187,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     "h-screen w-64 border-r border-border bg-card text-card-foreground flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out md:translate-x-0",
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 )}>
-                <div className="p-6 flex items-center gap-2 border-b border-border/50">
-                    <div className="bg-black text-white p-1 rounded">
-                        <span className="font-bold text-lg">S</span>
-                    </div>
-                    <span className="text-xl font-semibold tracking-tight">SupaEval</span>
+                <div className="p-2 border-b border-border/50">
+                    <WorkspaceSelector />
                 </div>
 
                 <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

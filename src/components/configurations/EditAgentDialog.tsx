@@ -12,8 +12,8 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
-import { Save, Plus, Trash2 } from 'lucide-react';
-import type { Agent, AgentCategory, AgentEndpoint } from '@/types/AgentTypes';
+import { Save, Plus, Trash2, UserPlus, Brain } from 'lucide-react';
+import type { Agent, AgentCategory, AgentEndpoint, TestUser, AgentMemory } from '@/types/AgentTypes';
 
 interface EditAgentDialogProps {
     open: boolean;
@@ -65,7 +65,7 @@ export function EditAgentDialog({
         } else {
             // Create new agent
             setEditedAgent({
-                id: Date.now(),
+                id: Date.now().toString(),
                 name: '',
                 category: 'Development',
                 description: '',
@@ -133,6 +133,68 @@ export function EditAgentDialog({
             ...editedAgent,
             endpoints: (editedAgent.endpoints || []).map(ep =>
                 ep.id === id ? { ...ep, [field]: value } : ep
+            )
+        });
+    };
+
+    const addTestUser = () => {
+        if (!editedAgent) return;
+        const newTestUser: TestUser = {
+            id: Date.now().toString(),
+            name: '',
+            email: ''
+        };
+        setEditedAgent({
+            ...editedAgent,
+            testUsers: [...(editedAgent.testUsers || []), newTestUser]
+        });
+    };
+
+    const removeTestUser = (id: string) => {
+        if (!editedAgent) return;
+        setEditedAgent({
+            ...editedAgent,
+            testUsers: (editedAgent.testUsers || []).filter(user => user.id !== id)
+        });
+    };
+
+    const updateTestUser = (id: string, field: keyof TestUser, value: string) => {
+        if (!editedAgent) return;
+        setEditedAgent({
+            ...editedAgent,
+            testUsers: (editedAgent.testUsers || []).map(user =>
+                user.id === id ? { ...user, [field]: value } : user
+            )
+        });
+    };
+
+    const addMemory = () => {
+        if (!editedAgent) return;
+        const newMemory: AgentMemory = {
+            id: Date.now().toString(),
+            key: '',
+            value: ''
+        };
+        setEditedAgent({
+            ...editedAgent,
+            memories: [...(editedAgent.memories || []), newMemory]
+        });
+    };
+
+    const removeMemory = (id: string) => {
+        if (!editedAgent) return;
+        setEditedAgent({
+            ...editedAgent,
+            memories: (editedAgent.memories || []).filter(memory => memory.id !== id)
+        });
+    };
+
+    const updateMemory = (id: string, field: keyof AgentMemory, value: string) => {
+        if (!editedAgent) return;
+        setEditedAgent({
+            ...editedAgent,
+            memories: (editedAgent.memories || []).map(memory =>
+                memory.id === id ? { ...memory, [field]: value } : memory
             )
         });
     };
@@ -317,6 +379,135 @@ export function EditAgentDialog({
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    {/* Parallel Runs for Batch Processing */}
+                    <div className="space-y-2">
+                        <Label htmlFor="parallel-runs">Parallel Runs (Batch Processing)</Label>
+                        <Input
+                            id="parallel-runs"
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={editedAgent.parallelRuns || ''}
+                            onChange={(e) => {
+                                const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                setEditedAgent({
+                                    ...editedAgent,
+                                    parallelRuns: value
+                                });
+                            }}
+                            placeholder="e.g., 5"
+                            className="w-full"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Number of parallel runs this agent can handle for batch processing operations (1-100)
+                        </p>
+                    </div>
+
+                    {/* Test Users */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Test Users</Label>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addTestUser}
+                                className="h-8"
+                            >
+                                <UserPlus className="h-3 w-3 mr-1" />
+                                Add Test User
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {(editedAgent.testUsers || []).map((user) => (
+                                <div key={user.id} className="flex gap-2 items-start p-3 border rounded-lg bg-muted/30">
+                                    <div className="flex-1 space-y-2">
+                                        <Input
+                                            value={user.name}
+                                            onChange={(e) => updateTestUser(user.id, 'name', e.target.value)}
+                                            placeholder="User name"
+                                            className="w-full"
+                                        />
+                                        <Input
+                                            type="email"
+                                            value={user.email}
+                                            onChange={(e) => updateTestUser(user.id, 'email', e.target.value)}
+                                            placeholder="user@example.com"
+                                            className="w-full"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeTestUser(user.id)}
+                                        className="text-muted-foreground hover:text-destructive shrink-0 mt-1"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {(editedAgent.testUsers || []).length === 0 && (
+                                <div className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed rounded-lg">
+                                    No test users configured
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Memories & Context */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Memories & Context</Label>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addMemory}
+                                className="h-8"
+                            >
+                                <Brain className="h-3 w-3 mr-1" />
+                                Add Memory
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {(editedAgent.memories || []).map((memory) => (
+                                <div key={memory.id} className="flex gap-2 items-start p-3 border rounded-lg bg-muted/30">
+                                    <div className="flex-1 space-y-2">
+                                        <Input
+                                            value={memory.key}
+                                            onChange={(e) => updateMemory(memory.id, 'key', e.target.value)}
+                                            placeholder="Memory key (e.g., user_preference, context_info)"
+                                            className="w-full font-mono text-sm"
+                                        />
+                                        <Textarea
+                                            value={memory.value}
+                                            onChange={(e) => updateMemory(memory.id, 'value', e.target.value)}
+                                            placeholder="Memory value or context information..."
+                                            className="w-full min-h-[80px] resize-y"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeMemory(memory.id)}
+                                        className="text-muted-foreground hover:text-destructive shrink-0 mt-1"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                            {(editedAgent.memories || []).length === 0 && (
+                                <div className="text-sm text-muted-foreground text-center py-4 border-2 border-dashed rounded-lg">
+                                    No memories or context configured
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Description */}

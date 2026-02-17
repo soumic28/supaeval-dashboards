@@ -23,7 +23,19 @@ export const workspaceService = {
   },
 
   // Optional switch workspace if applicable
+  // Optional switch workspace if applicable
   switchWorkspace: async (id: string) => {
-    return apiClient.post(`/workspaces/${id}/switch`);
+    try {
+      // Primary: standard REST sub-resource
+      return await apiClient.post(`/workspaces/${id}/switch`, {});
+    } catch (err) {
+      console.warn(
+        "Primary switch endpoint failed, trying fallback /auth/switch-workspace",
+      );
+      // Fallback: common auth-based switch
+      return await apiClient.post(`/auth/switch-workspace`, {
+        workspace_id: id,
+      });
+    }
   },
 };

@@ -25,6 +25,36 @@ export function useWorkspaces() {
   };
 }
 
+export function useUpdateWorkspace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      workspaceService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+    },
+  });
+}
+
+export function useDeleteWorkspace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => workspaceService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+    },
+  });
+}
+
+// Switch workspace mutation (simplified, logic remains in component for now or moved here if we inject auth)
+export function useSwitchWorkspace() {
+  return useMutation({
+    mutationFn: (id: string) => workspaceService.switchWorkspace(id),
+  });
+}
+
 export function useTestUsers(workspaceId: string) {
   const queryClient = useQueryClient();
 
