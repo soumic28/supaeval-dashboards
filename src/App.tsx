@@ -19,7 +19,7 @@ import MyPurchasesPage from './pages/datasets/MyPurchasesPage';
 // Evaluations
 import AllRunsPage from './pages/evaluations/AllRunsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
-import LayerEvaluationPage from './pages/evaluations/LayerEvaluationPage';
+import PromptPlaygroundPage from './pages/evaluations/PromptPlaygroundPage';
 import RunDetailedMetricPage from './pages/evaluations/RunDetailedMetricPage';
 
 // Configurations
@@ -65,7 +65,7 @@ function App() {
               {/* Evaluations */}
               <Route path="/evaluations/runs" element={<AllRunsPage />} />
               <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
-              <Route path="/evaluations/layer-by-layer" element={<LayerEvaluationPage />} />
+              <Route path="/evaluations/prompt-playground" element={<PromptPlaygroundPage />} />
               <Route path="/evaluations/run-details" element={<RunDetailedMetricPage />} />
               <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
 

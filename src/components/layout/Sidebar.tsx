@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
         children: [
             { name: 'All Runs', path: '/evaluations/runs' },
             { name: 'Scheduled', path: '/evaluations/scheduled' },
-            { name: 'Layer-by-Layer', path: '/evaluations/layer-by-layer' },
+            { name: 'Prompt Playground', path: '/evaluations/prompt-playground' },
         ]
     },
     {
