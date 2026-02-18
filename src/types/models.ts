@@ -15,9 +15,13 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "editor" | "viewer";
+  role: string; // "admin" | "editor" | "viewer" in UI, generic string in API
   avatar_url?: string;
+  tenant_id?: string;
+  workspace_id?: string;
+  is_active?: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AuthResponse {
@@ -29,11 +33,15 @@ export interface AuthResponse {
 
 export interface ApiKey {
   id: string;
-  key_prefix: string;
   name: string;
-  created_at: string;
-  last_used_at?: string;
   workspace_id: string;
+  prefix: string;
+  last_used_at?: string;
+  expires_at?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  api_key?: string; // Full key, returned only on creation
 }
 
 // --- 2. Workspace Management ---
@@ -41,6 +49,7 @@ export interface Workspace {
   id: string;
   name: string;
   slug: string; // url-friendly name
+  tenant_id?: string; // Tenant association
   created_at: string;
   updated_at: string;
 }
@@ -75,12 +84,31 @@ export interface AgentConfig {
 
 // --- 5. Datasets ---
 export interface Dataset {
+  // API Fields (Strict)
   id: string;
   workspace_id: string;
   name: string;
   description?: string;
-  entry_count: number;
+  type?: string;
+  category?: string;
+  human_reviewed?: boolean;
+  meta?: Record<string, any>;
   created_at: string;
+  updated_at?: string;
+
+  // UI/Mock Fields (Extended for Compatibility)
+  title?: string; // Mapped from name
+  desc?: string; // Mapped from description
+  author?: string;
+  price?: string;
+  rating?: number;
+  size?: string;
+  insights?: {
+    ambiguity: number;
+    noise: number;
+    memoryDepth: number;
+    toolChains: number;
+  };
 }
 
 export interface DatasetEntry {
@@ -126,13 +154,41 @@ export interface Span {
     | "planning"
     | "action"
     | "memory"
-    | "intent";
+    | "intent"
+    | "system"
+    | "input";
   start_ts: number;
   end_ts: number;
   status: "ok" | "error";
   attributes?: Record<string, any>; // Layer specific data
   input?: string;
   output?: string;
+  events?: TraceEvent[];
+}
+
+export interface TraceEvent {
+  event_type: string;
+  timestamp: string;
+  attributes?: Record<string, any>;
+}
+
+export interface TraceIngestRequest {
+  sent_at: string; // ISO timestamp
+  sdk?: {
+    name: string;
+    version: string;
+    language: string;
+  };
+  resource?: {
+    workspace_id?: string;
+    agent_id?: string;
+  };
+  traces: Trace[];
+}
+
+export interface TraceEventIngestRequest {
+  run_id: string;
+  events: TraceEvent[];
 }
 
 // --- 9. Evaluation Jobs ---
@@ -152,6 +208,7 @@ export interface Run {
   id: string;
   agent_id: string;
   workspace_id: string;
+  eval_profile_id?: string;
   status: string;
   input_data?: Record<string, any>;
   output_data?: Record<string, any>;
@@ -207,7 +264,72 @@ export interface Budget {
 
 // --- 13. System ---
 export interface SystemHealth {
-  status: "healthy" | "degraded" | "down";
   version: string;
   uptime_seconds: number;
+}
+
+// --- 14. Tenants ---
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  settings?: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantCreate {
+  name: string;
+  slug: string;
+  settings?: Record<string, any>;
+}
+
+export interface TenantUpdate {
+  name?: string;
+  slug?: string;
+  settings?: Record<string, any>;
+  is_active?: boolean;
+}
+
+// --- 15. Prompts ---
+export interface Prompt {
+  // API Fields (Strict)
+  id: string;
+  dataset_id: string;
+  prompt_type: string | null;
+  prompt_text: string;
+  human_reviewed: boolean;
+  healthy: boolean;
+  expected_output?: string | null;
+  prompt_complexity?: string | null;
+  created_at: string;
+  updated_at: string;
+
+  // UI/Mock Fields
+  prompt?: string; // Mapped from prompt_text
+  completion?: string; // Mapped from expected_output
+  category?: string; // UI only
+  reviewed?: boolean; // Mapped from human_reviewed
+  complexity?: string; // Mapped from prompt_complexity
+  created?: string; // UI formatted date
+}
+
+export interface PromptCreate {
+  dataset_id: string;
+  prompt_type: string;
+  prompt_text: string;
+  human_reviewed?: boolean;
+  healthy?: boolean;
+  expected_output?: string;
+  prompt_complexity?: string;
+}
+
+export interface PromptUpdate {
+  prompt_type?: string;
+  prompt_text?: string;
+  human_reviewed?: boolean;
+  healthy?: boolean;
+  expected_output?: string;
+  prompt_complexity?: string;
 }

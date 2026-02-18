@@ -1,187 +1,206 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import {
-    Activity, Brain, Database, Save, Wrench, MessageSquare, Cpu,
-    ArrowRight, TrendingUp, TrendingDown, Minus, ChevronRight, AlertCircle, CheckCircle2, Clock, Loader2
+    Activity,
+    Brain,
+    Database,
+    Save,
+    Wrench,
+    MessageSquare,
+    Cpu,
+    ArrowRight,
+    TrendingUp,
+    TrendingDown,
+    Minus,
+    ChevronRight,
+    AlertCircle,
+    CheckCircle2,
+    Clock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { runService } from "@/services/runs";
 
-// Helper to map backend status to UI status
-const getRunStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-        case 'completed': return 'bg-green-500/10 text-green-500 border-green-500/20';
-        case 'failed': return 'bg-red-500/10 text-red-500 border-red-500/20';
-        case 'running': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-        default: return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+// Enhanced layer data with comprehensive metrics
+const layers = [
+    {
+        id: 'input',
+        name: 'Input & Intent Layer',
+        subtext: 'Layer 3.1',
+        icon: Activity,
+        description: 'Interprets user query, detects intent, constraints, and task type.',
+        status: 'Active',
+        color: 'from-blue-500/20 to-cyan-500/20',
+        borderColor: 'border-blue-500/30',
+        metrics: [
+            { name: 'Intent Classification Accuracy', value: '98.5', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Constraint Adherence Score', value: '92.3', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Over-response Rate', value: '3.2', unit: '%', trend: 'down', threshold: 5, status: 'success' },
+            { name: 'Under-response Rate', value: '1.8', unit: '%', trend: 'down', threshold: 5, status: 'success' },
+            { name: 'Prompt Ambiguity Detection', value: '88.7', unit: '%', trend: 'up', threshold: 85, status: 'success' },
+            { name: 'Query Processing Time', value: '145', unit: 'ms', trend: 'flat', threshold: 200, status: 'success' },
+            { name: 'Intent Confidence Score', value: '94.2', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Multi-intent Detection', value: '89.5', unit: '%', trend: 'up', threshold: 85, status: 'success' },
+        ]
+    },
+    {
+        id: 'planning',
+        name: 'Planning & Reasoning Layer',
+        subtext: 'Layer 3.2',
+        icon: Brain,
+        description: 'Breaks the task into steps and determines execution order.',
+        status: 'Active',
+        color: 'from-purple-500/20 to-pink-500/20',
+        borderColor: 'border-purple-500/30',
+        metrics: [
+            { name: 'Plan Accuracy', value: '94.8', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Step Coverage', value: '96.2', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Reasoning Coherence Score', value: '8.7', unit: '/10', trend: 'up', threshold: 8, status: 'success' },
+            { name: 'Hallucinated Step Rate', value: '1.5', unit: '%', trend: 'down', threshold: 3, status: 'success' },
+            { name: 'Plan Completeness', value: '93.4', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Dependency Resolution', value: '97.8', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Planning Latency', value: '320', unit: 'ms', trend: 'flat', threshold: 500, status: 'success' },
+            { name: 'Step Optimization Score', value: '91.2', unit: '%', trend: 'up', threshold: 85, status: 'success' },
+        ]
+    },
+    {
+        id: 'retrieval',
+        name: 'Retrieval & Context Layer',
+        subtext: 'Layer 3.3',
+        icon: Database,
+        description: 'Fetches documents and supplies grounding context.',
+        status: 'Active',
+        color: 'from-green-500/20 to-emerald-500/20',
+        borderColor: 'border-green-500/30',
+        metrics: [
+            { name: 'Recall@5', value: '0.87', unit: '', trend: 'up', threshold: 0.8, status: 'success' },
+            { name: 'Precision@5', value: '0.92', unit: '', trend: 'up', threshold: 0.85, status: 'success' },
+            { name: 'Context Relevance Score', value: '9.3', unit: '/10', trend: 'up', threshold: 8.5, status: 'success' },
+            { name: 'Grounding Coverage', value: '89.4', unit: '%', trend: 'up', threshold: 85, status: 'success' },
+            { name: 'NDCG@10', value: '0.91', unit: '', trend: 'up', threshold: 0.85, status: 'success' },
+            { name: 'Retrieval Latency', value: '180', unit: 'ms', trend: 'flat', threshold: 250, status: 'success' },
+            { name: 'Context Diversity', value: '0.78', unit: '', trend: 'flat', threshold: 0.7, status: 'success' },
+            { name: 'Source Attribution Accuracy', value: '95.6', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+        ]
+    },
+    {
+        id: 'memory',
+        name: 'Memory Layer',
+        subtext: 'Layer 3.4',
+        icon: Save,
+        description: 'Stores and retrieves user context and maintains state.',
+        status: 'Active',
+        color: 'from-orange-500/20 to-amber-500/20',
+        borderColor: 'border-orange-500/30',
+        metrics: [
+            { name: 'Memory Recall Accuracy', value: '99.2', unit: '%', trend: 'up', threshold: 98, status: 'success' },
+            { name: 'State Consistency', value: '100', unit: '%', trend: 'flat', threshold: 99, status: 'success' },
+            { name: 'Context Window Utilization', value: '67.8', unit: '%', trend: 'flat', threshold: 80, status: 'warning' },
+            { name: 'Memory Persistence Rate', value: '98.9', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Session Continuity Score', value: '96.5', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Memory Access Latency', value: '45', unit: 'ms', trend: 'flat', threshold: 100, status: 'success' },
+            { name: 'State Corruption Rate', value: '0.1', unit: '%', trend: 'down', threshold: 1, status: 'success' },
+            { name: 'Cross-session Recall', value: '94.3', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+        ]
+    },
+    {
+        id: 'tool',
+        name: 'Tool & Action Layer',
+        subtext: 'Layer 3.5',
+        icon: Wrench,
+        description: 'Calls external tools, parses outputs, and handles failures.',
+        status: 'Active',
+        color: 'from-red-500/20 to-rose-500/20',
+        borderColor: 'border-red-500/30',
+        metrics: [
+            { name: 'Tool Selection Accuracy', value: '97.4', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Execution Success Rate', value: '95.8', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Parameter Validation Rate', value: '99.1', unit: '%', trend: 'up', threshold: 98, status: 'success' },
+            { name: 'Error Recovery Rate', value: '92.3', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Tool Response Parsing', value: '98.7', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Average Tool Latency', value: '450', unit: 'ms', trend: 'flat', threshold: 600, status: 'success' },
+            { name: 'Retry Success Rate', value: '87.5', unit: '%', trend: 'up', threshold: 80, status: 'success' },
+            { name: 'Tool Availability', value: '99.5', unit: '%', trend: 'flat', threshold: 99, status: 'success' },
+        ]
+    },
+    {
+        id: 'generation',
+        name: 'Generation Layer',
+        subtext: 'Layer 3.6',
+        icon: MessageSquare,
+        description: 'Produces the final user-visible output.',
+        status: 'Active',
+        color: 'from-indigo-500/20 to-violet-500/20',
+        borderColor: 'border-indigo-500/30',
+        metrics: [
+            { name: 'Response Quality Score', value: '4.8', unit: '/5', trend: 'up', threshold: 4.5, status: 'success' },
+            { name: 'Hallucination Rate', value: '0.4', unit: '%', trend: 'down', threshold: 1, status: 'success' },
+            { name: 'Factual Accuracy', value: '97.9', unit: '%', trend: 'up', threshold: 95, status: 'success' },
+            { name: 'Response Completeness', value: '95.3', unit: '%', trend: 'up', threshold: 90, status: 'success' },
+            { name: 'Tone Consistency', value: '93.7', unit: '%', trend: 'flat', threshold: 90, status: 'success' },
+            { name: 'Generation Latency', value: '890', unit: 'ms', trend: 'flat', threshold: 1000, status: 'success' },
+            { name: 'Token Efficiency', value: '88.2', unit: '%', trend: 'up', threshold: 85, status: 'success' },
+            { name: 'User Satisfaction', value: '4.7', unit: '/5', trend: 'up', threshold: 4.5, status: 'success' },
+        ]
+    },
+    {
+        id: 'system',
+        name: 'System Layer',
+        subtext: 'Layer 3.7',
+        icon: Cpu,
+        description: 'Ensures reliability, performance, and ROI.',
+        status: 'Active',
+        color: 'from-slate-500/20 to-zinc-500/20',
+        borderColor: 'border-slate-500/30',
+        metrics: [
+            { name: 'End-to-End Latency', value: '1.24', unit: 's', trend: 'flat', threshold: 2, status: 'success' },
+            { name: 'Cost per Run', value: '$0.018', unit: '', trend: 'down', threshold: 0.05, status: 'success' },
+            { name: 'System Uptime', value: '99.97', unit: '%', trend: 'flat', threshold: 99.9, status: 'success' },
+            { name: 'Throughput', value: '245', unit: 'req/min', trend: 'up', threshold: 200, status: 'success' },
+            { name: 'Error Rate', value: '0.12', unit: '%', trend: 'down', threshold: 0.5, status: 'success' },
+            { name: 'Resource Utilization', value: '72.3', unit: '%', trend: 'flat', threshold: 85, status: 'success' },
+            { name: 'Cache Hit Rate', value: '84.6', unit: '%', trend: 'up', threshold: 80, status: 'success' },
+            { name: 'ROI Score', value: '8.9', unit: '/10', trend: 'up', threshold: 7, status: 'success' },
+        ]
     }
-};
-
-const getRunStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-        case 'completed': return CheckCircle2;
-        case 'failed': return AlertCircle;
-        case 'running': return Loader2; // Animated spinner for running
-        default: return Clock;
-    }
-};
+];
 
 // Metric status helper
 const getMetricStatusColor = (status: string) => {
     switch (status) {
-        case 'success': return 'text-green-500';
-        case 'warning': return 'text-yellow-500';
-        case 'error': return 'text-red-500';
-        default: return 'text-muted-foreground';
+        case 'success':
+            return 'text-green-500';
+        case 'warning':
+            return 'text-yellow-500';
+        case 'error':
+            return 'text-red-500';
+        default:
+            return 'text-muted-foreground';
     }
 };
 
 const getMetricStatusIcon = (status: string) => {
     switch (status) {
-        case 'success': return CheckCircle2;
-        case 'warning': return AlertCircle;
-        case 'error': return AlertCircle;
-        default: return Clock;
+        case 'success':
+            return CheckCircle2;
+        case 'warning':
+            return AlertCircle;
+        case 'error':
+            return AlertCircle;
+        default:
+            return Clock;
     }
 };
 
-// Fallback layers structure to maintain UI if backend data is missing/flat
-const DEFAULT_LAYERS = [
-    { id: 'input', name: 'Input & Intent Layer', subtext: 'Layer 3.1', icon: Activity, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30' },
-    { id: 'planning', name: 'Planning & Reasoning Layer', subtext: 'Layer 3.2', icon: Brain, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30' },
-    { id: 'retrieval', name: 'Retrieval & Context Layer', subtext: 'Layer 3.3', icon: Database, color: 'from-green-500/20 to-emerald-500/20', borderColor: 'border-green-500/30' },
-    { id: 'memory', name: 'Memory Layer', subtext: 'Layer 3.4', icon: Save, color: 'from-orange-500/20 to-amber-500/20', borderColor: 'border-orange-500/30' },
-    { id: 'tool', name: 'Tool & Action Layer', subtext: 'Layer 3.5', icon: Wrench, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30' },
-    { id: 'generation', name: 'Generation Layer', subtext: 'Layer 3.6', icon: MessageSquare, color: 'from-indigo-500/20 to-violet-500/20', borderColor: 'border-indigo-500/30' },
-    { id: 'system', name: 'System Layer', subtext: 'Layer 3.7', icon: Cpu, color: 'from-slate-500/20 to-zinc-500/20', borderColor: 'border-slate-500/30' }
-];
-
 export default function RunDetailedMetricPage() {
-    const [searchParams] = useSearchParams();
-    // Support both 'id' (from AllRunsPage) and 'runId' (from NewRunModal/state)
-    const runId = searchParams.get('id') || searchParams.get('runId');
-
     const [selectedLayerId, setSelectedLayerId] = useState<string>('input');
-    const [runData, setRunData] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    // Hardcoded fallback data to prevent empty UI
-    const [layers, setLayers] = useState<any[]>(DEFAULT_LAYERS.map(l => ({
-        ...l,
-        status: 'Pending',
-        description: 'Waiting for run data...',
-        metrics: []
-    })));
-
-    useEffect(() => {
-        const fetchRun = async () => {
-            console.log("RunDetailedMetricPage: Fetching run...", runId);
-            if (!runId) {
-                console.error("RunDetailedMetricPage: No Run ID provided");
-                setError("No Run ID provided.");
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const response = await runService.getOne(runId);
-                console.log("RunDetailedMetricPage: API Response", response);
-
-                // Fix: TS might complain if it thinks response is Run, which doesn't have .data
-                const runObject = (response as any).data || response;
-
-                console.log("RunDetailedMetricPage: Run Data", runObject);
-                setRunData(runObject);
-
-                // Map backend metrics to UI layers
-                const metrics = runObject.metrics || {};
-                console.log("RunDetailedMetricPage: Metrics", metrics);
-
-                const newLayers = DEFAULT_LAYERS.map(layer => {
-                    const layerMetrics = [];
-                    let status = 'Active';
-
-                    // Example mapping logic
-                    // We only have a few metrics from the backend for now, so we map them to relevant layers
-                    // or just show them in the 'generation' layer as a placeholder.
-
-                    if (layer.id === 'generation') {
-                        if (metrics.faithfulness !== undefined) {
-                            layerMetrics.push({
-                                name: 'Faithfulness',
-                                value: metrics.faithfulness,
-                                unit: '',
-                                trend: 'flat',
-                                status: metrics.faithfulness > 0.7 ? 'success' : 'warning'
-                            });
-                        }
-                        if (metrics.relevance !== undefined) {
-                            layerMetrics.push({
-                                name: 'Relevance',
-                                value: metrics.relevance,
-                                unit: '',
-                                trend: 'flat',
-                                status: metrics.relevance > 0.7 ? 'success' : 'warning'
-                            });
-                        }
-                    }
-
-                    // Add generic metrics if specific ones are missing, just to show something
-                    if (layerMetrics.length === 0) {
-                        // We don't want to show empty "Status: Ready" if we actually have data elsewhere
-                        // But for now, to keep the UI from looking broken:
-                        layerMetrics.push({ name: 'Status', value: 'Ready', unit: '', trend: 'flat', status: 'success' });
-                    }
-
-                    return {
-                        ...layer,
-                        status: status,
-                        description: `Metrics for ${layer.name} from run ${runId}`,
-                        metrics: layerMetrics
-                    };
-                });
-
-                setLayers(newLayers);
-
-            } catch (err) {
-                console.error("Failed to fetch run:", err);
-                setError("Failed to load run details.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRun();
-    }, [runId]);
-
-    if (loading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Loading run details...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !runData) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <AlertCircle className="h-12 w-12 text-destructive" />
-                    <h1 className="text-xl font-bold">Error Loading Run</h1>
-                    <p className="text-muted-foreground">{error || "Run not found."}</p>
-                </div>
-            </div>
-        );
-    }
-
-    const RunStatusIcon = getRunStatusIcon(runData.status);
+    const handleLayerClick = (id: string) => {
+        setSelectedLayerId(id);
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
     return (
         <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background via-background to-muted/20">
@@ -196,7 +215,7 @@ export default function RunDetailedMetricPage() {
                 {layers.map((layer) => (
                     <motion.button
                         key={layer.id}
-                        onClick={() => setSelectedLayerId(layer.id)}
+                        onClick={() => handleLayerClick(layer.id)}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${selectedLayerId === layer.id
@@ -234,43 +253,42 @@ export default function RunDetailedMetricPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                                    Run Details
+                                    Layer Metrics Dashboard
                                 </h1>
                                 <p className="text-muted-foreground">
-                                    Run ID: <span className="font-mono text-primary">{runId}</span> •
-                                    Config: <span className="font-mono">{runData.eval_profile_id || "N/A"}</span>
+                                    Real-time evaluation metrics across all 7 agent layers • Run ID: <span className="font-mono text-primary">eval_2026_02_05_001</span>
                                 </p>
                             </div>
-                            <Badge variant="outline" className={`px-4 py-2 ${getRunStatusColor(runData.status)}`}>
-                                <RunStatusIcon className={`w-4 h-4 mr-2 ${runData.status === 'Running' ? 'animate-spin' : ''}`} />
-                                {runData.status || "Unknown Status"}
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+                                All Systems Active
                             </Badge>
                         </div>
 
-                        {/* Quick Stats - Populated from Run Metrics */}
+                        {/* Quick Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
                                 <CardContent className="p-4">
-                                    <p className="text-xs text-muted-foreground mb-1">Unified Score</p>
-                                    <p className="text-2xl font-bold text-blue-500">{runData.metrics?.unified_score || "N/A"}%</p>
+                                    <p className="text-xs text-muted-foreground mb-1">Overall Score</p>
+                                    <p className="text-2xl font-bold text-blue-500">96.8%</p>
                                 </CardContent>
                             </Card>
                             <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
                                 <CardContent className="p-4">
-                                    <p className="text-xs text-muted-foreground mb-1">Faithfulness</p>
-                                    <p className="text-2xl font-bold text-green-500">{runData.metrics?.faithfulness || "N/A"}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">Success Rate</p>
+                                    <p className="text-2xl font-bold text-green-500">98.2%</p>
                                 </CardContent>
                             </Card>
                             <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
                                 <CardContent className="p-4">
-                                    <p className="text-xs text-muted-foreground mb-1">Relevance</p>
-                                    <p className="text-2xl font-bold text-purple-500">{runData.metrics?.relevance || "N/A"}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">Avg Latency</p>
+                                    <p className="text-2xl font-bold text-purple-500">1.24s</p>
                                 </CardContent>
                             </Card>
                             <Card className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20">
                                 <CardContent className="p-4">
-                                    <p className="text-xs text-muted-foreground mb-1">Created At</p>
-                                    <p className="text-lg font-bold text-orange-500">{new Date(runData.created_at).toLocaleDateString()}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">Cost/Run</p>
+                                    <p className="text-2xl font-bold text-orange-500">$0.018</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -308,6 +326,10 @@ export default function RunDetailedMetricPage() {
                                                 <p className="text-xs text-primary font-mono mt-1 font-semibold">{layer.subtext}</p>
                                             </div>
                                         </div>
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
+                                            {layer.status}
+                                        </Badge>
                                     </CardHeader>
                                     <CardContent className="pt-2">
                                         <p className="text-sm text-muted-foreground mb-6 min-h-[40px]">
@@ -316,17 +338,18 @@ export default function RunDetailedMetricPage() {
 
                                         <AnimatePresence mode="wait">
                                             {selectedLayerId === layer.id ? (
+                                                // Expanded view - show all metrics
                                                 <motion.div
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
                                                     className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                                                 >
-                                                    {layer.metrics.map((metric: any, idx: number) => {
+                                                    {layer.metrics.map((metric, idx) => {
                                                         const StatusIcon = getMetricStatusIcon(metric.status);
                                                         return (
                                                             <motion.div
-                                                                key={idx}
+                                                                key={metric.name}
                                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                                 animate={{ opacity: 1, scale: 1 }}
                                                                 transition={{ delay: idx * 0.05 }}
@@ -340,7 +363,7 @@ export default function RunDetailedMetricPage() {
                                                                 </div>
                                                                 <div className="flex items-end justify-between mt-3">
                                                                     <div className="flex items-baseline gap-1">
-                                                                        <span className="text-xl font-bold">{metric.value}</span>
+                                                                        <span className="text-2xl font-bold">{metric.value}</span>
                                                                         <span className="text-xs text-muted-foreground">{metric.unit}</span>
                                                                     </div>
                                                                     {metric.trend === 'up' ? (
@@ -364,14 +387,15 @@ export default function RunDetailedMetricPage() {
                                                     })}
                                                 </motion.div>
                                             ) : (
+                                                // Collapsed view - show first 4 metrics
                                                 <motion.div
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
                                                     className="grid grid-cols-2 gap-3"
                                                 >
-                                                    {layer.metrics.slice(0, 4).map((metric: any, idx: number) => (
-                                                        <div key={idx} className="bg-background/50 p-3 rounded-lg border border-border/50">
+                                                    {layer.metrics.slice(0, 4).map((metric) => (
+                                                        <div key={metric.name} className="bg-background/50 p-3 rounded-lg border border-border/50">
                                                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1 line-clamp-2 h-8">
                                                                 {metric.name}
                                                             </p>
@@ -397,11 +421,6 @@ export default function RunDetailedMetricPage() {
                                         {selectedLayerId !== layer.id && layer.metrics.length > 4 && (
                                             <p className="text-xs text-muted-foreground text-center mt-4">
                                                 +{layer.metrics.length - 4} more metrics • Click to expand
-                                            </p>
-                                        )}
-                                        {selectedLayerId !== layer.id && layer.metrics.length === 0 && (
-                                            <p className="text-xs text-muted-foreground text-center mt-4">
-                                                No metrics available
                                             </p>
                                         )}
                                     </CardContent>

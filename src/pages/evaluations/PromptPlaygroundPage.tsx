@@ -221,33 +221,25 @@ const metricsByMode = {
     ]
 };
 
-const LayerEvaluationPage = () => {
+const PromptPlaygroundPage = () => {
     const [activeStep, setActiveStep] = useState(-1);
     const [isRunning, setIsRunning] = useState(false);
     const [userQuery, setUserQuery] = useState("Book a flight to NYC for next Tuesday, under $500");
-    const [mode, setMode] = useState<'offline' | 'online' | 'hybrid'>('hybrid');
     const [scenario, setScenario] = useState(baseScenario);
     const [expandAll, setExpandAll] = useState(false);
 
-    // Update scenario when mode changes
+    // Initialize scenario with hybrid metrics (combining offline and online)
     useEffect(() => {
         const newScenario = baseScenario.map((layer, index) => {
-            let metrics: any[] = [];
-            if (mode === 'offline') {
-                metrics = metricsByMode.offline[index];
-            } else if (mode === 'online') {
-                metrics = metricsByMode.online[index];
-            } else {
-                // Hybrid: Combine a subset of both
-                metrics = [
-                    ...metricsByMode.offline[index].slice(0, 1),
-                    ...metricsByMode.online[index].slice(0, 2)
-                ];
-            }
+            // Hybrid: Combine a subset of both offline and online metrics
+            const metrics = [
+                ...metricsByMode.offline[index].slice(0, 1),
+                ...metricsByMode.online[index].slice(0, 2)
+            ];
             return { ...layer, metrics };
         });
         setScenario(newScenario);
-    }, [mode]);
+    }, []);
 
     useEffect(() => {
         if (isRunning && activeStep < scenario.length) {
@@ -285,24 +277,10 @@ const LayerEvaluationPage = () => {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-bold tracking-tight">Layer-by-Layer Evaluation</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Prompt Playground</h1>
                         <p className="text-muted-foreground text-lg">
                             Interactive simulation of the agentic evaluation pipeline.
                         </p>
-                    </div>
-                    <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg border border-border">
-                        {(['offline', 'online', 'hybrid'] as const).map((m) => (
-                            <button
-                                key={m}
-                                onClick={() => setMode(m)}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === m
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                            >
-                                {m.charAt(0).toUpperCase() + m.slice(1)}
-                            </button>
-                        ))}
                     </div>
                 </div>
 
@@ -365,4 +343,4 @@ const LayerEvaluationPage = () => {
     );
 };
 
-export default LayerEvaluationPage;
+export default PromptPlaygroundPage;

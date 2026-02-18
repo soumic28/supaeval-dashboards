@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Plus, Eye, Edit, Trash2, CheckCircle, XCircle, Search, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/Label';
 import { Badge } from '@/components/ui/Badge';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
+import { Switch } from '@/components/ui/Switch';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
 import { NewRunModal } from '@/components/evaluations/NewRunModal';
 
 interface Dataset {
-    id: number;
+    id: string | number;
     name: string;
     type: string;
     layersCovered: string;
@@ -62,9 +63,62 @@ const MyDatasetsPage = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [datasets, setDatasets] = useState<Dataset[]>(initialDatasets);
+    // const [isLoading, setIsLoading] = useState(false); // Unused for now
+
+    // Fetch real datasets on mount
+    // Fetch Data Logic
+    const fetchDatasets = async () => {
+        try {
+            const { datasetService } = await import("@/services/datasets");
+            const { promptService } = await import("@/services/prompts"); // Import prompt service
+
+            const apiDatasets = await datasetService.getAll();
+
+            if (apiDatasets && Array.isArray(apiDatasets)) {
+                // Fetch prompts for each dataset to get the count
+                const datasetsWithCounts = await Promise.all(apiDatasets.map(async (d: any) => {
+                    let count = 0;
+                    try {
+                        const prompts = await promptService.getAll(d.id);
+                        if (Array.isArray(prompts)) {
+                            count = prompts.length;
+                        }
+                    } catch (err) {
+                        console.warn(`Failed to fetch prompts for dataset ${d.id}`, err);
+                    }
+
+                    return {
+                        id: d.id,
+                        name: d.name,
+                        type: d.type || "Custom",
+                        layersCovered: "General",
+                        prompts: count, // Use fetched count
+                        complexity: "Medium" as "Medium", // Explicit cast to match union type
+                        runs: 0,
+                        humanReviewed: d.human_reviewed || false, // Map from API
+                        turnType: "Single",
+                        persona: "General"
+                    };
+                }));
+
+                // Real datasets first, then mocks (or maybe just real?)
+                // User screenshot implies mixed or just real. Code used mixed.
+                setDatasets([...datasetsWithCounts, ...initialDatasets]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch datasets", error);
+            // Optionally toast error?
+        }
+    };
+
+    // Initial Fetch
+    useEffect(() => {
+        fetchDatasets();
+    }, []);
+
     const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
-    const [editDataset, setEditDataset] = useState<Dataset | null>(null); // For editing
-    const [datasetToDelete, setDatasetToDelete] = useState<number | null>(null); // For deletion
+    const [editDataset, setEditDataset] = useState<Dataset | null>(null);
+    const [datasetToDelete, setDatasetToDelete] = useState<string | number | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -96,30 +150,79 @@ const MyDatasetsPage = () => {
         setIsUploadOpen(true);
     };
 
-    const handleUploadSubmit = () => {
-        toast({
-            title: "Upload Started",
-            description: `Uploading ${uploadData.name} as ${uploadData.type}...`,
-        });
-        setIsUploadOpen(false);
-        setUploadData({ name: '', type: 'Security', description: '', file: null });
+    const handleUploadSubmit = async () => {
+        try {
+            const { datasetService } = await import("@/services/datasets");
+
+            // If file is present, ideally we'd use a different endpoint or read it.
+            // For now, let's create the dataset metadata entry
+            const newDataset: any = {
+                name: uploadData.name,
+                description: uploadData.description,
+                type: uploadData.type
+                // File handling TBD - likely separate ingest endpoint
+            };
+
+            await datasetService.create(newDataset);
+
+            toast({
+                title: "Dataset Created",
+                description: `Dataset ${uploadData.name} created successfully.`,
+            });
+            setIsUploadOpen(false);
+            setUploadData({ name: '', type: 'Security', description: '', file: null });
+            fetchDatasets(); // Refresh list
+
+        } catch (error) {
+            console.error("Failed to create dataset", error);
+            toast({
+                title: "Creation Failed",
+                description: "Could not create dataset. Check console for details.",
+                variant: "destructive"
+            });
+        }
     };
 
-    const handleDeleteClick = (e: React.MouseEvent, id: number) => {
+    const handleDeleteClick = (e: React.MouseEvent, id: string | number) => {
         e.stopPropagation();
         setDatasetToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (datasetToDelete) {
-            setDatasets(datasets.filter(d => d.id !== datasetToDelete));
-            toast({
-                title: "Dataset Deleted",
-                description: "The dataset has been removed.",
-            });
-            setIsDeleteModalOpen(false);
-            setDatasetToDelete(null);
+            try {
+                // Check if it's a real dataset (UUID) or mock (Number)
+                const isReal = typeof datasetToDelete === 'string' && datasetToDelete.length > 10;
+
+                if (isReal) {
+                    const { datasetService } = await import("@/services/datasets");
+                    await datasetService.delete(datasetToDelete as string);
+                    toast({
+                        title: "Dataset Deleted",
+                        description: "The dataset has been removed from the backend.",
+                    });
+                } else {
+                    // Mock delete only local state
+                    setDatasets(datasets.filter(d => d.id !== datasetToDelete));
+                    toast({
+                        title: "Mock Dataset Deleted",
+                        description: "Removed from local view.",
+                    });
+                }
+
+                setIsDeleteModalOpen(false);
+                setDatasetToDelete(null);
+                if (isReal) fetchDatasets(); // Refresh if real
+
+            } catch (error) {
+                console.error("Failed to delete dataset", error);
+                toast({
+                    title: "Delete Failed",
+                    description: "Could not delete dataset.",
+                    variant: "destructive"
+                });
+            }
         }
     };
 
@@ -135,15 +238,43 @@ const MyDatasetsPage = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleEditSubmit = () => {
+    const handleEditSubmit = async () => {
         if (editDataset) {
-            setDatasets(datasets.map(d => d.id === editDataset.id ? editDataset : d));
-            toast({
-                title: "Dataset Updated",
-                description: `Changes to ${editDataset.name} have been saved.`,
-            });
-            setIsEditModalOpen(false);
-            setEditDataset(null);
+            try {
+                const isReal = typeof editDataset.id === 'string' && editDataset.id.length > 10;
+
+                if (isReal) {
+                    const { datasetService } = await import("@/services/datasets");
+                    await datasetService.update(editDataset.id, {
+                        name: editDataset.name,
+                        description: (editDataset as any).desc, // Ensure mapping if needed
+                        human_reviewed: editDataset.humanReviewed, // Assuming backend supports this field
+                        // API doesn't confirm other fields yet
+                    } as any);
+                    toast({
+                        title: "Dataset Updated",
+                        description: `Changes to ${editDataset.name} have been saved to backend.`,
+                    });
+                    fetchDatasets();
+                } else {
+                    setDatasets(datasets.map(d => d.id === editDataset.id ? editDataset : d));
+                    toast({
+                        title: "Mock Dataset Updated",
+                        description: `Changes to ${editDataset.name} have been saved locally.`,
+                    });
+                }
+
+                setIsEditModalOpen(false);
+                setEditDataset(null);
+
+            } catch (error) {
+                console.error("Failed to update dataset", error);
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update dataset.",
+                    variant: "destructive"
+                });
+            }
         }
     }
 
@@ -338,15 +469,46 @@ const MyDatasetsPage = () => {
                     )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsReviewModalOpen(false)}>Cancel</Button>
-                        <Button type="submit" onClick={() => {
-                            setDatasets(datasets.map(d =>
-                                d.id === selectedDataset?.id ? { ...d, humanReviewed: true } : d
-                            ));
-                            setIsReviewModalOpen(false);
-                            toast({
-                                title: "Review Complete",
-                                description: "Dataset marked as reviewed.",
-                            });
+                        <Button type="submit" onClick={async () => {
+                            if (!selectedDataset) return;
+
+                            try {
+                                const isReal = typeof selectedDataset.id === 'string' && selectedDataset.id.length > 10;
+
+                                if (isReal) {
+                                    // Update via API
+                                    await (await import("@/services/datasets")).datasetService.update(selectedDataset.id, {
+                                        human_reviewed: true,
+                                    });
+
+                                    toast({
+                                        title: "Review Complete",
+                                        description: "Dataset marked as reviewed and saved to backend.",
+                                    });
+
+                                    // Refetch datasets to get latest data
+                                    await fetchDatasets();
+                                } else {
+                                    // Mock update - just update local state
+                                    setDatasets(datasets.map(d =>
+                                        d.id === selectedDataset?.id ? { ...d, humanReviewed: true } : d
+                                    ));
+
+                                    toast({
+                                        title: "Review Complete",
+                                        description: "Dataset marked as reviewed locally.",
+                                    });
+                                }
+
+                                setIsReviewModalOpen(false);
+                            } catch (error) {
+                                console.error("Failed to mark dataset as reviewed", error);
+                                toast({
+                                    title: "Review Failed",
+                                    description: "Could not mark dataset as reviewed.",
+                                    variant: "destructive"
+                                });
+                            }
                         }}>Mark as Reviewed</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -397,6 +559,21 @@ const MyDatasetsPage = () => {
                                     onChange={(e) => setEditDataset({ ...editDataset, persona: e.target.value })}
                                     className="col-span-3"
                                 />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="human-reviewed" className="text-right">
+                                    Human Reviewed
+                                </Label>
+                                <div className="flex items-center space-x-2 col-span-3">
+                                    <Switch
+                                        id="human-reviewed"
+                                        checked={editDataset.humanReviewed}
+                                        onCheckedChange={(checked) => setEditDataset({ ...editDataset, humanReviewed: checked })}
+                                    />
+                                    <Label htmlFor="human-reviewed" className="font-normal text-muted-foreground">
+                                        {editDataset.humanReviewed ? "Yes" : "No"}
+                                    </Label>
+                                </div>
                             </div>
                         </div>
                     )}

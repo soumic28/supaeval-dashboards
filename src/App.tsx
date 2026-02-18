@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage';
 import DashboardHome from './pages/DashboardHome';
 import RLHFPage from './pages/RLHFPage';
 import SDKPage from './pages/SDKPage';
+import { TenantOnboardingFlow } from './components/onboarding/TenantOnboardingFlow';
 
 // Datasets
 import MyDatasetsPage from './pages/datasets/MyDatasetsPage';
@@ -18,7 +19,7 @@ import MyPurchasesPage from './pages/datasets/MyPurchasesPage';
 // Evaluations
 import AllRunsPage from './pages/evaluations/AllRunsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
-import LayerEvaluationPage from './pages/evaluations/LayerEvaluationPage';
+import PromptPlaygroundPage from './pages/evaluations/PromptPlaygroundPage';
 import RunDetailedMetricPage from './pages/evaluations/RunDetailedMetricPage';
 
 // Configurations
@@ -37,15 +38,8 @@ import EndpointsPage from './pages/agents/EndpointsPage';
 // Other
 import MetricsPage from './pages/MetricsPage';
 import SettingsPage from './pages/SettingsPage';
+import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage';
 import TeamPage from './pages/TeamPage';
-
-// Resources
-import CostAnalysisPage from './pages/resources/CostAnalysisPage';
-import PricingTierPage from './pages/resources/PricingTierPage';
-import UsageManagementPage from './pages/resources/UsageManagementPage';
-
-// Onboarding
-import OnboardingPage from './pages/onboarding/OnboardingPage';
 
 function App() {
   return (
@@ -55,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/onboarding/tenant" element={<TenantOnboardingFlow />} />
 
             <Route element={<Layout />}>
               <Route path="/" element={<DashboardHome />} />
@@ -70,7 +65,7 @@ function App() {
               {/* Evaluations */}
               <Route path="/evaluations/runs" element={<AllRunsPage />} />
               <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
-              <Route path="/evaluations/layer-by-layer" element={<LayerEvaluationPage />} />
+              <Route path="/evaluations/prompt-playground" element={<PromptPlaygroundPage />} />
               <Route path="/evaluations/run-details" element={<RunDetailedMetricPage />} />
               <Route path="/evaluations" element={<Navigate to="/evaluations/runs" replace />} />
 
@@ -95,14 +90,8 @@ function App() {
               <Route path="/rlhf" element={<RLHFPage />} />
               <Route path="/sdk" element={<SDKPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/workspace" element={<WorkspaceSettingsPage />} />
               <Route path="/team" element={<TeamPage />} />
-
-              {/* Resources */}
-              <Route path="/resources/cost-analysis" element={<CostAnalysisPage />} />
-              <Route path="/resources/pricing-tier" element={<PricingTierPage />} />
-              <Route path="/resources/usage-management" element={<UsageManagementPage />} />
-
-              <Route path="/onboarding" element={<OnboardingPage />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/components/ui/use-toast';
 import { TraceDetailModal } from './components/TraceDetailModal';
+import { datasetService } from "@/services/datasets";
+import { promptService } from "@/services/prompts";
 
 // Mock data for all datasets
 const MOCK_DATASETS: Record<string, any> = {
@@ -49,31 +52,20 @@ const InsightBar = ({ label, value }: { label: string, value: number }) => (
 const DatasetDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
+    const { toast } = useToast();
 
-    // Fallback to location state if ID not found in mock (though it should be)
-    const datasetInfo = MOCK_DATASETS[id || ""] || {
-        title: location.state?.datasetName || `Dataset ${id}`,
-        desc: "Description not available.",
-        author: "Unknown",
-        price: "Unknown",
-        rating: 0,
-        category: "Unknown",
-        created: "Unknown",
-        size: "Unknown",
-        type: "Unknown",
-        insights: { ambiguity: 50, noise: 50, memoryDepth: 50, toolChains: 50 }
-    };
 
-    const insights = datasetInfo.insights || { ambiguity: 50, noise: 50, memoryDepth: 50, toolChains: 50 };
+    // State for data
+    const [datasetInfo, setDatasetInfo] = useState<any>(null);
+    const [prompts, setPrompts] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [prompts, setPrompts] = useState<{ id: string; prompt: string; completion: string; complexity: string; category: string; created: string; reviewed: boolean; }[]>([]);
+    const insights = datasetInfo?.insights || { ambiguity: 50, noise: 50, memoryDepth: 50, toolChains: 50 };
 
-    // Initialize prompts only once or when ID changes
-    useMemo(() => {
-        const category = datasetInfo.category || "General";
+    // Helper for Mock Gen
+    const generateMockPrompts = (datasetId: string, category: string) => {
         const count = 50;
-        const newPrompts = Array.from({ length: count }, (_, i) => {
+        return Array.from({ length: count }, (_, i) => {
             let promptText = "";
             let completionText = "";
 
@@ -96,16 +88,124 @@ const DatasetDetailPage = () => {
 
             return {
                 id: `P-${1000 + i}`,
-                prompt: promptText,
-                completion: completionText,
-                complexity: ['L0', 'L1', 'L2'][i % 3],
+                dataset_id: datasetId,
+                prompt_text: promptText,
+                prompt: promptText, // UI Mapping
+                prompt_type: "completion",
+                human_reviewed: Math.random() > 0.7,
+                reviewed: Math.random() > 0.7, // UI Mapping
+                healthy: true,
+                expected_output: completionText,
+                completion: completionText, // UI Mapping
+                prompt_complexity: ['L0', 'L1', 'L2'][i % 3],
+                complexity: ['L0', 'L1', 'L2'][i % 3], // UI Mapping
                 category: category,
+                created_at: new Date().toISOString(),
                 created: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toLocaleDateString(),
-                reviewed: Math.random() > 0.7 // 30% chance of being already reviewed
+                updated_at: new Date().toISOString()
             };
         });
-        setPrompts(newPrompts);
-    }, [datasetInfo.category]);
+    };
+
+    // Fetch Data
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!id) return;
+            setIsLoading(true);
+            try {
+                // Services imported statically
+                // const { datasetService } = await import("@/services/datasets");
+                // const { promptService } = await import("@/services/prompts");
+
+                // Check if ID is a UUID (Real API)
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+                // 1. Load Base Mock for Fallback/Demo
+                let currentDs = MOCK_DATASETS[id] || MOCK_DATASETS["1"];
+                let currentPrompts: any[] = [];
+
+                if (isUuid) {
+                    try {
+                        // 2. Try Fetching Real Dataset
+                        const apiDs = await datasetService.getOne(id);
+                        if (apiDs) {
+                            // Merge API data into Mock data structure
+                            currentDs = {
+                                ...currentDs, // Preserves visual fields (insights, rating, etc.)
+                                ...apiDs,     // Overwrites core fields (name, id, etc.)
+                                title: apiDs.name,
+                                desc: apiDs.description,
+                                // Maintain Mock Category if API doesn't have one, or map it
+                                category: apiDs.category || currentDs.category,
+                                type: apiDs.type || currentDs.type,
+                            };
+                        }
+
+                        // 3. Try Fetching Real Prompts
+                        const apiPrompts = await promptService.getAll(id);
+                        if (apiPrompts && Array.isArray(apiPrompts) && apiPrompts.length > 0) {
+                            currentPrompts = apiPrompts.map(p => ({
+                                ...p,
+                                // Map API fields to UI fields
+                                prompt: p.prompt_text,
+                                completion: p.expected_output || "N/A",
+                                complexity: p.prompt_complexity || "L0",
+                                category: currentDs.category || "General", // UI category
+                                reviewed: p.human_reviewed,
+                                created: new Date(p.created_at).toLocaleDateString()
+                            }));
+                        } else {
+                            // Fallback if API returns empty list (but success)
+                            // console.warn("API returned 0 prompts, showing empty list.");
+                            // currentPrompts = []; // Explicitly empty for real datasets
+                        }
+
+                    } catch (err) {
+                        console.warn("API Fetch Failed (Dataset/Prompts), using Full Mock Fallback", err);
+                        // Fallback completely to Mocks
+                        currentPrompts = generateMockPrompts(id, currentDs.category || "General");
+                    }
+                } else {
+                    // Non-UUID: purely mock/demo mode
+                    currentPrompts = generateMockPrompts(id, currentDs.category || "General");
+                }
+
+                setDatasetInfo(currentDs);
+                setPrompts(currentPrompts);
+
+            } catch (error) {
+                console.error("Critical Failure loading dataset details", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    // Refetch prompts from API
+    const refetchPrompts = async () => {
+        if (!id) return;
+        try {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            if (isUuid) {
+                const apiPrompts = await promptService.getAll(id);
+                if (apiPrompts && Array.isArray(apiPrompts) && apiPrompts.length > 0) {
+                    const mappedPrompts = apiPrompts.map(p => ({
+                        ...p,
+                        prompt: p.prompt_text,
+                        completion: p.expected_output || "N/A",
+                        complexity: p.prompt_complexity || "L0",
+                        category: datasetInfo?.category || "General",
+                        reviewed: p.human_reviewed,
+                        created: new Date(p.created_at).toLocaleDateString()
+                    }));
+                    setPrompts(mappedPrompts);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to refetch prompts", error);
+        }
+    };
 
     const [editingPrompt, setEditingPrompt] = useState<any>(null);
     const [deletingPromptId, setDeletingPromptId] = useState<string | null>(null);
@@ -156,42 +256,174 @@ const DatasetDetailPage = () => {
         setIsReviewPromptOpen(true);
     };
 
-    const savePromptEdit = () => {
+    const savePromptEdit = async () => {
         if (editingPrompt) {
-            setPrompts(prompts.map(p => p.id === editingPrompt.id ? editingPrompt : p));
-            setIsEditPromptOpen(false);
-            setEditingPrompt(null);
+            try {
+                // Check if real prompt (UUID) or force try - removing length check to ensure we hit API
+                const isReal = typeof editingPrompt.id === 'string'; // && editingPrompt.id.length > 10;
+
+                if (isReal) {
+                    console.log("Updating prompt:", editingPrompt.id, {
+                        human_reviewed: editingPrompt.reviewed,
+                        prompt_text: editingPrompt.prompt,
+                        expected_output: editingPrompt.completion,
+                        prompt_complexity: editingPrompt.complexity
+                    });
+
+                    await promptService.update(editingPrompt.id, {
+                        prompt_text: editingPrompt.prompt,
+                        expected_output: editingPrompt.completion,
+                        prompt_complexity: editingPrompt.complexity,
+                        human_reviewed: editingPrompt.reviewed,
+                    });
+
+                    console.log("Update successful, refetching prompts...");
+
+                    // Refetch prompts to get the latest data from backend
+                    await refetchPrompts();
+
+                    toast({
+                        title: "Prompt Updated",
+                        description: "Changes saved successfully.",
+                    });
+                } else {
+                    // Mock update - just update local state
+                    setPrompts(prompts.map(p => p.id === editingPrompt.id ? editingPrompt : p));
+                }
+
+                setIsEditPromptOpen(false);
+                setEditingPrompt(null);
+            } catch (error) {
+                console.error("Failed to update prompt", error);
+                toast({
+                    title: "Update Failed",
+                    description: "Failed to save changes. Check console for details.",
+                    variant: "destructive"
+                });
+            }
         }
     };
 
-    const confirmDeletePrompt = () => {
-        if (deletingPromptId) {
+    const confirmDeletePrompt = async () => {
+        if (!deletingPromptId) {
+            console.error("❌ deletingPromptId is missing/null in confirmDeletePrompt");
+            return;
+        }
+
+        try {
+            console.log(`[Delete Prompt] Deleting ID: ${deletingPromptId}`);
+            // Always attempt API delete, let backend handle 404 if not found
+            await promptService.delete(deletingPromptId);
+            console.log("[Delete Prompt] API success");
+
             setPrompts(prompts.filter(p => p.id !== deletingPromptId));
             setIsDeletePromptOpen(false);
             setDeletingPromptId(null);
+
+            toast({
+                title: "Prompt Deleted",
+                description: "Successfully deleted prompt.",
+            });
+
+        } catch (error) {
+            console.error("Failed to delete prompt", error);
+            // If it's a 404, maybe we should still remove it locally?
+            // For now, let's assume if it fails, we keep it, or warn user.
+            alert("Failed to delete prompt. Please check the console for details.");
         }
     };
 
-    const markAsReviewed = () => {
+    const markAsReviewed = async () => {
         if (reviewingPrompt) {
-            setPrompts(prompts.map(p => p.id === reviewingPrompt.id ? { ...p, reviewed: true } : p));
-            setIsReviewPromptOpen(false);
-            setReviewingPrompt(null);
+            try {
+                const isReal = typeof reviewingPrompt.id === 'string';
+
+                if (isReal) {
+                    // Update via API
+                    await promptService.update(reviewingPrompt.id, {
+                        human_reviewed: true,
+                    });
+
+                    console.log("Marked as reviewed, refetching prompts...");
+
+                    // Refetch prompts to get the latest data from backend
+                    await refetchPrompts();
+
+                    toast({
+                        title: "Prompt Reviewed",
+                        description: "Prompt marked as humanly reviewed.",
+                    });
+                } else {
+                    // Mock update - just update local state
+                    setPrompts(prompts.map(p => p.id === reviewingPrompt.id ? { ...p, reviewed: true } : p));
+                }
+
+                setIsReviewPromptOpen(false);
+                setReviewingPrompt(null);
+            } catch (error) {
+                console.error("Failed to mark as reviewed", error);
+                toast({
+                    title: "Review Failed",
+                    description: "Failed to mark prompt as reviewed.",
+                    variant: "destructive"
+                });
+            }
         }
     };
 
-    const handleAddPrompt = () => {
+    const handleAddPrompt = async () => {
+        const tempId = `P-${Date.now()}`;
+
+        // Optimistic UI
         const promptToAdd = {
-            id: `P-${Date.now()}`,
+            id: tempId,
             ...newPrompt,
             created: new Date().toLocaleDateString(),
-            reviewed: false
+            reviewed: false,
+            prompt_text: newPrompt.prompt,
+            expected_output: newPrompt.completion,
+            human_reviewed: false,
+            dataset_id: id || "temp",
+            complexity: newPrompt.complexity,
+            category: newPrompt.category
         };
+
+        try {
+            // Try API creation
+            if (id && id.length > 10) { // Real dataset
+                const created = await promptService.create({
+                    dataset_id: id,
+                    prompt_text: newPrompt.prompt,
+                    expected_output: newPrompt.completion,
+                    prompt_complexity: newPrompt.complexity as any,
+                    prompt_type: "completion"
+                });
+                // API returns array?
+                if (Array.isArray(created) && created.length > 0) {
+                    const real = created[0];
+                    // Replace temp with real
+                    promptToAdd.id = real.id;
+                    promptToAdd.created = new Date(real.created_at).toLocaleDateString();
+                } else if (!Array.isArray(created) && (created as any).id) {
+                    const real = created as any;
+                    promptToAdd.id = real.id;
+                    promptToAdd.created = new Date(real.created_at).toLocaleDateString();
+                }
+            }
+        } catch (error) {
+            console.error("Failed to create prompt on API", error);
+            // Fallback to local only (already there)
+        }
+
         setPrompts([promptToAdd, ...prompts]);
         setIsAddPromptOpen(false);
         setNewPrompt({ prompt: "", completion: "", complexity: "L0", category: "General" });
     };
 
+
+    if (isLoading || !datasetInfo) {
+        return <div className="p-10 flex justify-center">Loading...</div>;
+    }
 
     return (
         <div className="space-y-6 max-w-[1200px] mx-auto">
@@ -357,7 +589,25 @@ const DatasetDetailPage = () => {
             {isEditPromptOpen && editingPrompt && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                     <div className="bg-card w-full max-w-lg border rounded-lg shadow-lg p-6 space-y-4">
-                        <h2 className="text-lg font-semibold">Edit Prompt</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Edit Prompt</h2>
+                            <div className="flex items-center space-x-2">
+                                <label htmlFor="human-verified" className="text-sm font-medium cursor-pointer select-none">
+                                    Human Verified
+                                </label>
+                                <button
+                                    id="human-verified"
+                                    onClick={() => setEditingPrompt({ ...editingPrompt, reviewed: !editingPrompt.reviewed })}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${editingPrompt.reviewed ? 'bg-green-600' : 'bg-input'
+                                        }`}
+                                >
+                                    <span
+                                        className={`${editingPrompt.reviewed ? 'translate-x-6' : 'translate-x-1'
+                                            } inline-block h-4 w-4 transform rounded-full bg-background transition-transform`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Prompt Text</label>

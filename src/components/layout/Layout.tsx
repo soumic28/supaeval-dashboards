@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export function Layout() {
     const navigate = useNavigate();
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, user } = useAuth();
     const { profile } = useUserProfile();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,13 +28,6 @@ export function Layout() {
         }
     }, [isLoading, isAuthenticated, navigate]);
 
-    // Redirect to new onboarding flow if enabled
-    useEffect(() => {
-        if (profile.showOnboarding) {
-            navigate('/onboarding');
-        }
-    }, [profile.showOnboarding, navigate]);
-
     // Check if user has completed onboarding on mount
     useEffect(() => {
         const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
@@ -48,8 +41,15 @@ export function Layout() {
     const handleWelcomeComplete = () => {
         localStorage.setItem('onboarding_completed', 'true');
         setShowWelcome(false);
-        // Start tour after welcome survey if onboarding is enabled
-        if (profile.showOnboarding) {
+
+        // Check if user needs tenant onboarding
+        const needsTenantOnboarding = !user?.tenant_id && !localStorage.getItem('tenant_onboarding_completed');
+
+        if (needsTenantOnboarding) {
+            // Redirect to tenant onboarding
+            navigate('/onboarding/tenant');
+        } else if (profile.showOnboarding) {
+            // Start tour after welcome survey if onboarding is enabled
             setTimeout(() => setShowTour(true), 800);
         }
     };

@@ -25,26 +25,10 @@ export function useAgents() {
   };
 }
 
-export function useAgentConfig(agentId: string) {
-  return useQuery({
-    queryKey: ["agent-config", agentId],
-    queryFn: () => agentService.getConfig(agentId),
-    enabled: !!agentId,
-  });
-}
-
 // --- Datasets ---
 export function useDatasets() {
   return useQuery({
     queryKey: ["datasets"],
     queryFn: datasetService.getAll,
-  });
-}
-
-export function useDatasetEntries(datasetId: string) {
-  return useQuery({
-    queryKey: ["dataset-entries", datasetId],
-    queryFn: () => datasetService.getEntries(datasetId),
-    enabled: !!datasetId,
   });
 }
