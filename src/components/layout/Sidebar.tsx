@@ -58,7 +58,7 @@ const navItems: NavItem[] = [
         name: 'Benchmarks',
         icon: LineChart,
         children: [
-            { name: 'Suites', path: '/benchmarks/suites' },
+            // { name: 'Suites', path: '/benchmarks/suites' },
             { name: 'Comparisons', path: '/benchmarks/comparisons' },
             { name: 'Regression', path: '/benchmarks/regression' },
         ]
