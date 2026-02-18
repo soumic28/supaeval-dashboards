@@ -63,6 +63,15 @@ const navItems: NavItem[] = [
             { name: 'Regression', path: '/benchmarks/regression' },
         ]
     },
+    {
+        name: 'Resource Management',
+        icon: Database,
+        children: [
+            { name: 'Cost Analysis', path: '/resource/cost' },
+            { name: 'Pricing Tier', path: '/resource/pricing' },
+            { name: 'Usage Management', path: '/resource/usage' },
+        ]
+    },
     { name: 'Metrics', icon: BarChart2, path: '/metrics' },
     {
         name: 'Agents',
