@@ -141,7 +141,12 @@ print(f"Score: {results.overall_score}")`;
                                     Start Installation
                                     <ArrowRight className="ml-2 w-4 h-4" />
                                 </Button>
-                                <Button variant="outline" size="lg" className="h-12 px-8 text-base">
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="h-12 px-8 text-base"
+                                    onClick={() => window.open('https://www.supaeval.com/docs', '_blank')}
+                                >
                                     <BookOpen className="w-4 h-4 mr-2" />
                                     Read Docs
                                 </Button>
