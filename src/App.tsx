@@ -40,6 +40,7 @@ import MetricsPage from './pages/MetricsPage';
 import SettingsPage from './pages/SettingsPage';
 import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage';
 import TeamPage from './pages/TeamPage';
+import PricingTierPage from './pages/resources/PricingTierPage';
 
 function App() {
   return (
@@ -79,6 +80,8 @@ function App() {
               <Route path="/benchmarks/comparisons" element={<ComparisonsPage />} />
               <Route path="/benchmarks/regression" element={<RegressionPage />} />
               <Route path="/benchmarks" element={<Navigate to="/benchmarks/suites" replace />} />
+
+              <Route path="/resource/pricing" element={<PricingTierPage />} />
 
               {/* Agents */}
               <Route path="/agents/connected" element={<ConnectedAgentsPage />} />

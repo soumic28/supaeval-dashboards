@@ -50,6 +50,9 @@ export interface Workspace {
   name: string;
   slug: string; // url-friendly name
   tenant_id?: string; // Tenant association
+  is_active?: boolean;
+  plan?: string;
+  subscription_id?: string;
   created_at: string;
   updated_at: string;
 }
