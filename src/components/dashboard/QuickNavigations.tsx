@@ -8,12 +8,12 @@ export function QuickNavigations() {
     const navigate = useNavigate();
 
     const navTiles = [
-        { name: 'Datasets', description: 'Manage evaluation datasets & benchmarks', icon: Database, path: '/datasets', color: 'text-blue-600', bg: 'bg-blue-50' },
-        { name: 'Configurations', description: 'Evaluation settings & metric definitions', icon: Settings, path: '/configs', color: 'text-zinc-600', bg: 'bg-zinc-100' },
-        { name: 'Evaluations', description: 'Run and monitor agent evaluations', icon: Play, path: '/evaluations', color: 'text-green-600', bg: 'bg-green-50' },
-        { name: 'Dashboards', description: 'Deep dive analytics & failure analysis', icon: BarChart2, path: '/dashboards', color: 'text-purple-600', bg: 'bg-purple-50' },
-        { name: 'RLHF', description: 'Review feedback & improve models', icon: MessageSquare, path: '/rlhf', color: 'text-orange-600', bg: 'bg-orange-50' },
-        { name: 'SDK & API', description: 'Integration docs & API keys', icon: Code2, path: '/sdk', color: 'text-pink-600', bg: 'bg-pink-50' },
+        { name: 'Datasets', icon: Database, path: '/datasets', color: 'text-blue-600', bg: 'bg-blue-50' },
+        { name: 'Configurations', icon: Settings, path: '/configurations', color: 'text-zinc-600', bg: 'bg-zinc-100' },
+        { name: 'Evaluations', icon: Play, path: '/evaluations', color: 'text-green-600', bg: 'bg-green-50' },
+        { name: 'Dashboards', icon: BarChart2, path: '/metrics', color: 'text-purple-600', bg: 'bg-purple-50' },
+        { name: 'RLHF', icon: MessageSquare, path: '/rlhf', color: 'text-orange-600', bg: 'bg-orange-50' },
+        { name: 'SDK & API', icon: Code2, path: '/sdk', color: 'text-pink-600', bg: 'bg-pink-50' },
     ];
 
     return (
@@ -41,7 +41,7 @@ export function QuickNavigations() {
                                         {tile.name}
                                         <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all text-muted-foreground" />
                                     </h3>
-                                    <p className="text-sm text-muted-foreground mt-1 leading-snug">{tile.description}</p>
+
                                 </div>
                             </CardContent>
                         </Card>

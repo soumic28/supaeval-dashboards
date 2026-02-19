@@ -42,9 +42,7 @@ export function Welcome() {
                 <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
                     {greeting}, {userName}
                 </h1>
-                <p className="text-muted-foreground">
-                    Here's what's happening with your evaluations today.
-                </p>
+
             </div>
         </div>
     );
