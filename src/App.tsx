@@ -42,6 +42,7 @@ import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage';
 import TeamPage from './pages/TeamPage';
 import PricingTierPage from './pages/resources/PricingTierPage';
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -82,6 +83,7 @@ function App() {
               <Route path="/benchmarks" element={<Navigate to="/benchmarks/suites" replace />} />
 
               <Route path="/resource/pricing" element={<PricingTierPage />} />
+
 
               {/* Agents */}
               <Route path="/agents/connected" element={<ConnectedAgentsPage />} />

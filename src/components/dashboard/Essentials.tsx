@@ -49,7 +49,9 @@ export function Essentials() {
                                 <Building2 className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Workspace</span>
                             </div>
-                            <div className="font-medium text-foreground">{activeWorkspace?.name || "Select Workspace"}</div>
+                            <Link to="/settings/workspace" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                {activeWorkspace?.name || "Select Workspace"}
+                            </Link>
                             <div className="text-xs text-muted-foreground">
                                 {activeWorkspace?.is_active !== false ? 'Active' : 'Inactive'}
                             </div>
@@ -74,8 +76,9 @@ export function Essentials() {
                                     <Copy className="w-3 h-3 text-muted-foreground" />
                                 </Button>
                             </div>
+
                             <div className="text-xs text-muted-foreground">
-                                Plan: {activeWorkspace?.plan || 'Standard Plan'}
+                                Plan: <Link to="/resource/pricing" className="hover:underline hover:text-primary transition-colors">{activeWorkspace?.plan || 'Standard Plan'}</Link>
                             </div>
                         </div>
 
@@ -85,8 +88,10 @@ export function Essentials() {
                                 <CreditCard className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Pricing Tier</span>
                             </div>
-                            <div className="font-medium text-foreground">{activeWorkspace?.plan || "Standard Plan"}</div>
-                            <Link to="/resource/pricing" className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
+                            <Link to="/resource/pricing" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                {activeWorkspace?.plan || "Standard Plan"}
+                            </Link>
+                            <Link to="/settings?tab=billing" className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
                                 <span>Manage subscription</span>
                                 <ExternalLink className="w-3 h-3" />
                             </Link>
@@ -98,11 +103,13 @@ export function Essentials() {
                                 <Activity className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Active Agent</span>
                             </div>
-                            <div className="font-medium text-foreground">Kick_Start Agent</div>
-                            <div className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
+                            <Link to="/agents/connected" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                Kick_Start Agent
+                            </Link>
+                            <Link to="/agents/endpoints" className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
                                 <span>Configure endpoints</span>
                                 <Settings className="w-3 h-3" />
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </CardContent>
