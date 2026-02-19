@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, Filter, Search, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Filter, Search, ChevronLeft, ChevronRight, Edit, Trash2, Upload, FileJson, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/Dialog";
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/use-toast';
 import { TraceDetailModal } from './components/TraceDetailModal';
@@ -53,6 +61,7 @@ const DatasetDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { toast } = useToast();
+    const promptFileInputRef = useRef<HTMLInputElement>(null);
 
 
     // State for data
@@ -421,6 +430,56 @@ const DatasetDetailPage = () => {
     };
 
 
+
+    const handlePromptFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const fileType = file.name.split('.').pop()?.toLowerCase();
+
+        if (fileType !== 'json' && fileType !== 'csv') {
+            toast({
+                title: "Invalid File Type",
+                description: "Please upload a JSON or CSV file.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        toast({
+            title: "Importing Prompts",
+            description: `Reading ${file.name}...`,
+        });
+
+        // Simulate reading file
+        setTimeout(() => {
+            toast({
+                title: "Import Successful",
+                description: `Successfully imported prompts from ${file.name}.`,
+            });
+            // Here you would parse the file and add to prompts
+        }, 1000);
+
+        if (promptFileInputRef.current) promptFileInputRef.current.value = '';
+    };
+
+    const handleExport = (format: 'json' | 'csv') => {
+        toast({
+            title: "Exporting Dataset",
+            description: `Exporting as ${format.toUpperCase()}...`,
+        });
+
+        // Mock export logic
+        setTimeout(() => {
+            // In a real app, this would generate the file and trigger download
+            toast({
+                title: "Export Ready",
+                description: `Your ${format.toUpperCase()} file is ready for download.`,
+            });
+        }, 1000);
+    };
+
+
     if (isLoading || !datasetInfo) {
         return <div className="p-10 flex justify-center">Loading...</div>;
     }
@@ -453,10 +512,26 @@ const DatasetDetailPage = () => {
                         <Button variant="outline" size="icon" title="Delete Dataset" className="hover:text-red-600 hover:border-red-200 hover:bg-red-50">
                             <Trash2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline">
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
+                        <Button variant="outline" onClick={() => handleExport('json')}>
+                            <FileJson className="mr-2 h-4 w-4" />
+                            Export JSON
                         </Button>
+                        <Button variant="outline" onClick={() => handleExport('csv')}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Export CSV
+                        </Button>
+
+                        <input
+                            type="file"
+                            ref={promptFileInputRef}
+                            className="hidden"
+                            accept=".json,.csv"
+                            onChange={handlePromptFileChange}
+                        />
+                        {/* <Button variant="outline" onClick={handleImportPromptsClick}>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import Prompts
+                        </Button> */}
                         <Button onClick={() => setIsAddPromptOpen(true)}>Add Prompt</Button>
                     </div>
                 </div>
@@ -655,12 +730,20 @@ const DatasetDetailPage = () => {
                 </div>
             )}
 
-            {/* Add Prompt Modal */}
-            {isAddPromptOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-lg border rounded-lg shadow-lg p-6 space-y-4">
-                        <h2 className="text-lg font-semibold">Add New Prompt</h2>
-                        <div className="space-y-4">
+            {/* Add Prompt Modal - Refactored */}
+            <Dialog open={isAddPromptOpen} onOpenChange={setIsAddPromptOpen}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>Add Prompts</DialogTitle>
+                    </DialogHeader>
+
+                    <Tabs defaultValue="single" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-4">
+                            <TabsTrigger value="single">Single Entry</TabsTrigger>
+                            <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="single" className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Prompt Text</label>
                                 <textarea
@@ -701,14 +784,39 @@ const DatasetDetailPage = () => {
                                     />
                                 </div>
                             </div>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setIsAddPromptOpen(false)}>Cancel</Button>
-                            <Button onClick={handleAddPrompt}>Add Prompt</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                            <DialogFooter className="mt-4">
+                                <Button variant="outline" onClick={() => setIsAddPromptOpen(false)}>Cancel</Button>
+                                <Button onClick={handleAddPrompt}>Add Prompt</Button>
+                            </DialogFooter>
+                        </TabsContent>
+
+                        <TabsContent value="bulk" className="space-y-4">
+                            <div className="border-2 border-dashed border-input rounded-lg p-10 flex flex-col items-center justify-center gap-4 text-center hover:bg-muted/50 transition-colors">
+                                <div className="p-4 rounded-full bg-primary/10 text-primary">
+                                    <Upload className="w-8 h-8" />
+                                </div>
+                                <div>
+                                    <p className="font-medium">Click to upload or drag and drop</p>
+                                    <p className="text-sm text-muted-foreground mt-1">JSON or CSV files only (Max 10MB)</p>
+                                </div>
+                                <input
+                                    type="file"
+                                    ref={promptFileInputRef}
+                                    className="hidden"
+                                    accept=".json,.csv"
+                                    onChange={handlePromptFileChange}
+                                />
+                                <Button onClick={() => promptFileInputRef.current?.click()} variant="secondary">
+                                    Select File
+                                </Button>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                <p>Expected JSON format: <code>[{`{"prompt": "...", "completion": "..."}`}]</code></p>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                </DialogContent>
+            </Dialog>
 
             {/* Human Review Modal */}
             {isReviewPromptOpen && reviewingPrompt && (

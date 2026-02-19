@@ -1,12 +1,19 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Copy, ExternalLink, Settings, Building2, CreditCard, Activity, Key } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspaces } from '@/hooks/queries/use-workspaces';
 
 export function Essentials() {
     const [isOpen, setIsOpen] = useState(true);
+    const { user } = useAuth();
+    const { workspaces } = useWorkspaces();
+
+    const activeWorkspace = workspaces?.find(w => w.id === user?.workspace_id);
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
@@ -42,8 +49,12 @@ export function Essentials() {
                                 <Building2 className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Workspace</span>
                             </div>
-                            <div className="font-medium text-foreground">SupaEval-RG</div>
-                            <div className="text-xs text-muted-foreground">Active • East US</div>
+                            <Link to="/settings/workspace" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                {activeWorkspace?.name || "Select Workspace"}
+                            </Link>
+                            <div className="text-xs text-muted-foreground">
+                                {activeWorkspace?.is_active !== false ? 'Active' : 'Inactive'}
+                            </div>
                         </div>
 
                         {/* Subscription / ID */}
@@ -53,17 +64,22 @@ export function Essentials() {
                                 <span className="text-xs font-medium uppercase tracking-wider">Subscription ID</span>
                             </div>
                             <div className="flex items-center gap-2 group">
-                                <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">53176444...3fef6</span>
+                                <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">
+                                    {activeWorkspace?.subscription_id || '53176444...3fef6'}
+                                </span>
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => copyToClipboard('53176444-fb84-4c70-ac9d-f8e36bc3fef6', 'Subscription ID')}
+                                    onClick={() => copyToClipboard(activeWorkspace?.subscription_id || '53176444-fb84-4c70-ac9d-f8e36bc3fef6', 'Subscription ID')}
                                 >
                                     <Copy className="w-3 h-3 text-muted-foreground" />
                                 </Button>
                             </div>
-                            <div className="text-xs text-muted-foreground">Plan: SupaEval Enterprise</div>
+
+                            <div className="text-xs text-muted-foreground">
+                                Plan: <Link to="/resource/pricing" className="hover:underline hover:text-primary transition-colors">{activeWorkspace?.plan || 'Standard Plan'}</Link>
+                            </div>
                         </div>
 
                         {/* Plan / Pricing */}
@@ -72,11 +88,13 @@ export function Essentials() {
                                 <CreditCard className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Pricing Tier</span>
                             </div>
-                            <div className="font-medium text-foreground">Standard Plan</div>
-                            <div className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
+                            <Link to="/resource/pricing" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                {activeWorkspace?.plan || "Standard Plan"}
+                            </Link>
+                            <Link to="/settings?tab=billing" className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
                                 <span>Manage subscription</span>
                                 <ExternalLink className="w-3 h-3" />
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Agent Info */}
@@ -85,11 +103,13 @@ export function Essentials() {
                                 <Activity className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium uppercase tracking-wider">Active Agent</span>
                             </div>
-                            <div className="font-medium text-foreground">Kick_Start Agent</div>
-                            <div className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
+                            <Link to="/agents/connected" className="font-medium text-foreground hover:underline hover:text-primary transition-colors">
+                                Kick_Start Agent
+                            </Link>
+                            <Link to="/agents/endpoints" className="flex items-center gap-1 text-primary hover:underline cursor-pointer text-xs mt-0.5">
                                 <span>Configure endpoints</span>
                                 <Settings className="w-3 h-3" />
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </CardContent>

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { CommandPalette } from '@/components/CommandPalette';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { Essentials } from '@/components/dashboard/Essentials';
-import { Welcome } from '@/components/dashboard/Welcome';
+
 import { GetStarted } from '@/components/dashboard/GetStarted';
 import { AgentsActionableInsights } from '@/components/dashboard/AgentsActionableInsights';
 import { QuickNavigations } from '@/components/dashboard/QuickNavigations';
@@ -32,7 +32,7 @@ export default function DashboardHome() {
             <div className="space-y-8 animate-in fade-in duration-500">
                 {/* Header & Essentials (Always Present) */}
                 <div className="space-y-6">
-                    <Welcome />
+
 
                     <Essentials />
                 </div>
