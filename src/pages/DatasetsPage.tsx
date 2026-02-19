@@ -1,10 +1,20 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Upload, FileText, MessageSquare, Database, Download } from 'lucide-react';
+import { DatasetUploadModal } from '@/components/datasets/DatasetUploadModal';
 
 export default function DatasetsPage() {
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+    const handleUpload = (file: File) => {
+        console.log("Uploading file:", file.name);
+        // Implement upload logic here
+        setIsUploadModalOpen(false);
+    };
+
     const myDatasets = [
         { id: 1, name: "Customer Support V1", type: "Conversation", size: "1.2k samples", updated: "2 days ago", status: "Ready" },
         { id: 2, name: "RAG Golden Set", type: "QA Pairs", size: "500 samples", updated: "1 week ago", status: "Ready" },
@@ -25,7 +35,7 @@ export default function DatasetsPage() {
                     <p className="text-muted-foreground">Manage your evaluation datasets and benchmarks.</p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Button variant="outline" className="flex-1 md:flex-none">
+                    <Button variant="outline" className="flex-1 md:flex-none" onClick={() => setIsUploadModalOpen(true)}>
                         <Upload className="mr-2 h-4 w-4" />
                         Import
                     </Button>
@@ -96,6 +106,12 @@ export default function DatasetsPage() {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            <DatasetUploadModal
+                open={isUploadModalOpen}
+                onOpenChange={setIsUploadModalOpen}
+                onUpload={handleUpload}
+            />
         </div>
     );
 }
