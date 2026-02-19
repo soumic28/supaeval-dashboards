@@ -429,9 +429,7 @@ const DatasetDetailPage = () => {
         setNewPrompt({ prompt: "", completion: "", complexity: "L0", category: "General" });
     };
 
-    const handleImportPromptsClick = () => {
-        promptFileInputRef.current?.click();
-    };
+
 
     const handlePromptFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
