@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
         icon: Play,
         children: [
             { name: 'All Runs', path: '/evaluations/runs' },
+            { name: 'Traces', path: '/evaluations/traces' },
             { name: 'Scheduled', path: '/evaluations/scheduled' },
             { name: 'Prompt Playground', path: '/evaluations/prompt-playground' },
         ]

@@ -21,6 +21,7 @@ import AllRunsPage from './pages/evaluations/AllRunsPage';
 import ScheduledPage from './pages/evaluations/ScheduledPage';
 import PromptPlaygroundPage from './pages/evaluations/PromptPlaygroundPage';
 import RunDetailedMetricPage from './pages/evaluations/RunDetailedMetricPage';
+import TracesPage from './pages/evaluations/TracesPage';
 
 // Configurations
 import AgentConfigPage from './pages/configurations/AgentConfigPage';
@@ -66,6 +67,7 @@ function App() {
 
               {/* Evaluations */}
               <Route path="/evaluations/runs" element={<AllRunsPage />} />
+              <Route path="/evaluations/traces" element={<TracesPage />} />
               <Route path="/evaluations/scheduled" element={<ScheduledPage />} />
               <Route path="/evaluations/prompt-playground" element={<PromptPlaygroundPage />} />
               <Route path="/evaluations/run-details" element={<RunDetailedMetricPage />} />
