@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/Button';
-import { Filter, Download, Columns, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity } from 'lucide-react';
+import { Filter, Download, Columns, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
@@ -72,19 +72,38 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
     return base;
 };
 
-const mockTraces = [
-    { id: 'tr-4b47f308c9e5fa...', name: 'Evaluation Query', request: '{"domain_name": "ai...", "agent_name": "supervisor..."}', response: 'null', tokens: '154', latency: '6.980s', requestTime: '11/30/2025, 07:32:32', state: 'OK', details: generateMockDetails('tr-4b47') },
-    { id: 'tr-0e1493a9cfa...', name: 'Search Request', request: '{"domain_name": "ai...", "agent_name": "supervisor..."}', response: 'null', tokens: '420', latency: '3.010s', requestTime: '11/30/2025, 07:32:04', state: 'OK', details: generateMockDetails('tr-0e14', true) },
-    { id: 'tr-729ab5c6d7e8f...', name: 'Chat Completion', request: 'Draft a follow-up email to the prospect...', response: 'I found some relevant content that...', tokens: '26832', latency: '15.348s', requestTime: '11/30/2025, 07:32:05', state: 'OK', details: generateMockDetails('tr-729a') },
-    { id: 'tr-c1a2b3c4d5e6f...', name: 'Metrics Analysis', request: '{"domain_name": "ai...", "agent_name": "supervisor_rc2..."}', response: 'null', tokens: '89', latency: '2.563s', requestTime: '11/30/2025, 07:32:05', state: 'OK', details: generateMockDetails('tr-c1a2') },
-    { id: 'tr-d5e6f7a8b9c0d...', name: 'Router Span', request: '{"domain_name": "ai...", "agent_name": "supervisor_rc2..."}', response: 'null', tokens: '12', latency: '2.618s', requestTime: '11/30/2025, 07:32:04', state: 'OK', details: generateMockDetails('tr-d5e6') },
-    { id: 'tr-e9f0a1b2c3d4e...', name: 'Agent Step', request: '{"domain_name": "ai...", "agent_name": "supervisor_rc2..."}', response: 'null', tokens: '550', latency: '2.969s', requestTime: '11/30/2025, 07:47:04', state: 'OK', details: generateMockDetails('tr-e9f0', true) },
-];
+// Generate 32 mock traces for pagination
+const mockTraces = Array.from({ length: 32 }).map((_, i) => {
+    const id = `tr-${Math.random().toString(16).slice(2, 10)}`;
+    const isAdvanced = i % 3 === 0;
+    const names = ['Evaluation Query', 'Search Request', 'Chat Completion', 'Metrics Analysis', 'Router Span', 'Agent Step'];
+    return {
+        id: id + '...',
+        name: names[i % names.length],
+        request: '{"domain_name": "ai...", "agent_name": "supervisor..."}',
+        response: 'null',
+        requestTime: `11/30/2025, 07:${30 + (i % 30)}:${10 + i}`,
+        state: i % 7 === 0 ? 'Error' : 'OK',
+        details: generateMockDetails(id, isAdvanced)
+    };
+});
 
 const TracesPage = () => {
     const [traces] = useState(mockTraces);
     const [selectedTrace, setSelectedTrace] = useState<typeof mockTraces[0] | null>(null);
     const [activeTab, setActiveTab] = useState<'Overview' | 'Timeline' | 'Raw'>('Overview');
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    const totalPages = Math.ceil(traces.length / itemsPerPage);
+    const paginatedTraces = traces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+    const handleFirstPage = () => setCurrentPage(1);
+    const handleLastPage = () => setCurrentPage(totalPages);
 
     return (
         <div className="relative flex h-[calc(100vh-8rem)] w-full overflow-hidden">
@@ -146,7 +165,7 @@ const TracesPage = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                            {traces.map((trace, i) => (
+                            {paginatedTraces.map((trace, i) => (
                                 <tr
                                     key={i}
                                     onClick={() => setSelectedTrace(trace)}
@@ -162,7 +181,10 @@ const TracesPage = () => {
                                     <td className="px-6 py-4 text-xs">{trace.details.latency}</td>
                                     <td className="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap">{trace.requestTime}</td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex items-center gap-1.5 text-green-500 text-xs font-medium">
+                                        <span className={cn(
+                                            "inline-flex items-center gap-1.5 text-xs font-medium",
+                                            trace.state === 'Error' ? "text-destructive" : "text-green-500"
+                                        )}>
                                             <CheckCircle2 className="w-3.5 h-3.5" />
                                             {trace.state}
                                         </span>
@@ -171,6 +193,38 @@ const TracesPage = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Pagination Footer */}
+                <div className="flex justify-between items-center text-sm text-muted-foreground pt-2">
+                    <div className="flex items-center gap-2">
+                        <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, traces.length)} of {traces.length} results</span>
+                        <div className="h-4 w-px bg-border mx-2"></div>
+                        <span className="flex items-center gap-2 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            Delta sync: Enabled
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleFirstPage} disabled={currentPage === 1}>
+                            <ChevronsLeft className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handlePrevPage} disabled={currentPage === 1}>
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+
+                        <div className="flex items-center justify-center min-w-[3rem] px-2 font-medium text-foreground">
+                            {currentPage} / {totalPages}
+                        </div>
+
+                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleNextPage} disabled={currentPage === totalPages}>
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleLastPage} disabled={currentPage === totalPages}>
+                            <ChevronsRight className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -187,7 +241,9 @@ const TracesPage = () => {
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
                                         <h2 className="text-xl font-semibold">{selectedTrace.name}</h2>
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">{selectedTrace.state}</Badge>
+                                        <Badge variant="outline" className={selectedTrace.state === 'Error' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-green-500/10 text-green-500 border-green-500/20"}>
+                                            {selectedTrace.state}
+                                        </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground font-mono flex items-center gap-2">
                                         <Calendar className="w-3 h-3" /> {selectedTrace.requestTime}
@@ -196,12 +252,6 @@ const TracesPage = () => {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="sm" className="h-8 text-xs font-medium px-2">
-                                        <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Prev
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 text-xs font-medium px-2">
-                                        Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                                    </Button>
                                     <div className="h-4 w-px bg-border mx-1" />
                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setSelectedTrace(null)}>
                                         <X className="w-4 h-4" />
