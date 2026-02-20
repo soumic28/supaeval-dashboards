@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button';
-import { Filter, Download, Columns, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { useState } from 'react';
+import { Filter, Download, Columns as ColumnsIcon, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight, BarChart3, Check } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 
@@ -72,8 +72,8 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
     return base;
 };
 
-// Generate 32 mock traces for pagination
-const mockTraces = Array.from({ length: 32 }).map((_, i) => {
+// Generate 32 mock traces
+const generateInitialTraces = () => Array.from({ length: 32 }).map((_, i) => {
     const id = `tr-${Math.random().toString(16).slice(2, 10)}`;
     const isAdvanced = i % 3 === 0;
     const names = ['Evaluation Query', 'Search Request', 'Chat Completion', 'Metrics Analysis', 'Router Span', 'Agent Step'];
@@ -89,21 +89,70 @@ const mockTraces = Array.from({ length: 32 }).map((_, i) => {
 });
 
 const TracesPage = () => {
-    const [traces] = useState(mockTraces);
-    const [selectedTrace, setSelectedTrace] = useState<typeof mockTraces[0] | null>(null);
+    const [traces, setTraces] = useState(generateInitialTraces());
+    const [selectedTrace, setSelectedTrace] = useState<typeof traces[0] | null>(null);
     const [activeTab, setActiveTab] = useState<'Overview' | 'Timeline' | 'Raw'>('Overview');
+
+    // Header Actions State
+    const [viewMode, setViewMode] = useState<'logs' | 'charts'>('logs');
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    // Filter State
+    const [statusFilter, setStatusFilter] = useState<'All' | 'OK' | 'Error'>('All');
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+    // Columns State
+    const [showColumnsDropdown, setShowColumnsDropdown] = useState(false);
+    const [visibleColumns, setVisibleColumns] = useState({
+        id: true,
+        name: true,
+        userId: true,
+        tokens: true,
+        latency: true,
+        requestTime: true,
+        state: true
+    });
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const totalPages = Math.ceil(traces.length / itemsPerPage);
-    const paginatedTraces = traces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    // Apply filters
+    const filteredTraces = traces.filter(t => statusFilter === 'All' || t.state === statusFilter);
+    const totalPages = Math.ceil(filteredTraces.length / itemsPerPage);
+    const paginatedTraces = filteredTraces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-    const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-    const handleFirstPage = () => setCurrentPage(1);
-    const handleLastPage = () => setCurrentPage(totalPages);
+    // Reset page to 1 if filter changes
+    useEffect(() => { setCurrentPage(1) }, [statusFilter]);
+
+    // Handlers
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setTraces([...generateInitialTraces()]); // shuffle data
+            setIsRefreshing(false);
+        }, 800);
+    };
+
+    const handleExport = () => {
+        const headers = ['Trace ID', 'Name', 'User ID', 'Tokens', 'Latency', 'Request Time', 'State'].join(',');
+        const rows = traces.map(t =>
+            `"${t.id}","${t.name}","${t.details.user_id}","${t.details.tokens.total}","${t.details.latency}","${t.requestTime}","${t.state}"`
+        ).join('\n');
+
+        const csv = `${headers}\n${rows}`;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `traces_export_${new Date().getTime()}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
+    const toggleColumn = (key: keyof typeof visibleColumns) => {
+        setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     return (
         <div className="relative flex h-[calc(100vh-8rem)] w-full overflow-hidden">
@@ -119,16 +168,73 @@ const TracesPage = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" className="h-9">
-                            <Filter className="w-4 h-4 mr-2" /> Filter
+                        {/* Filter Dropdown */}
+                        <div className="relative">
+                            <Button
+                                variant={statusFilter !== 'All' ? 'default' : 'outline'}
+                                className="h-9 relative"
+                                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                            >
+                                <Filter className="w-4 h-4 mr-2" /> Filter
+                                {statusFilter !== 'All' && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></span>}
+                            </Button>
+                            {showFilterDropdown && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setShowFilterDropdown(false)}></div>
+                                    <div className="absolute right-0 mt-2 w-40 bg-card border rounded-md shadow-lg z-40 p-1">
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Status</div>
+                                        {['All', 'OK', 'Error'].map(opt => (
+                                            <button
+                                                key={opt}
+                                                className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded-sm flex items-center justify-between"
+                                                onClick={() => { setStatusFilter(opt as any); setShowFilterDropdown(false); }}
+                                            >
+                                                {opt}
+                                                {statusFilter === opt && <Check className="w-4 h-4" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Columns Dropdown */}
+                        <div className="relative">
+                            <Button variant="outline" className="h-9" onClick={() => setShowColumnsDropdown(!showColumnsDropdown)}>
+                                <ColumnsIcon className="w-4 h-4 mr-2" /> Columns
+                            </Button>
+                            {showColumnsDropdown && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setShowColumnsDropdown(false)}></div>
+                                    <div className="absolute right-0 mt-2 w-48 bg-card border rounded-md shadow-lg z-40 p-1">
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Toggle Columns</div>
+                                        {Object.entries({
+                                            id: 'Trace ID', name: 'Name', userId: 'User ID',
+                                            tokens: 'Tokens', latency: 'Latency', requestTime: 'Request Time', state: 'State'
+                                        }).map(([key, label]) => (
+                                            <button
+                                                key={key}
+                                                className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded-sm flex items-center gap-2"
+                                                onClick={() => toggleColumn(key as any)}
+                                            >
+                                                <div className={cn(
+                                                    "w-4 h-4 border rounded flex items-center justify-center",
+                                                    visibleColumns[key as keyof typeof visibleColumns] ? "bg-primary border-primary text-primary-foreground" : "border-input"
+                                                )}>
+                                                    {visibleColumns[key as keyof typeof visibleColumns] && <Check className="w-3 h-3" />}
+                                                </div>
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <Button variant="outline" className="h-9" onClick={handleRefresh} disabled={isRefreshing}>
+                            <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} /> Refresh
                         </Button>
-                        <Button variant="outline" className="h-9">
-                            <Columns className="w-4 h-4 mr-2" /> Columns
-                        </Button>
-                        <Button variant="outline" className="h-9">
-                            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-                        </Button>
-                        <Button variant="outline" className="h-9">
+                        <Button variant="outline" className="h-9" onClick={handleExport}>
                             <Download className="w-4 h-4 mr-2" /> Export
                         </Button>
                     </div>
@@ -136,10 +242,28 @@ const TracesPage = () => {
 
                 {/* Actions Bar */}
                 <div className="flex items-center justify-between border-b pb-4">
-                    <div className="flex bg-muted rounded-md p-1">
-                        <button className="px-3 py-1.5 text-sm font-medium bg-background shadow-sm rounded">Logs</button>
-                        <button className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
-                            Charts <span className="text-[10px] bg-primary/10 text-primary px-1 rounded ml-1">Beta</span>
+                    <div className="flex bg-muted rounded-md p-1 relative">
+                        <div className={cn(
+                            "absolute top-1 bottom-1 w-[calc(50%-4px)] bg-background shadow-sm rounded transition-all duration-200 pointer-events-none",
+                            viewMode === 'logs' ? "left-1" : "left-[calc(50%+4px)]"
+                        )}></div>
+                        <button
+                            className={cn(
+                                "px-3 py-1.5 text-sm font-medium relative z-10 rounded transition-colors w-24",
+                                viewMode === 'logs' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            onClick={() => setViewMode('logs')}
+                        >
+                            Logs
+                        </button>
+                        <button
+                            className={cn(
+                                "px-3 py-1.5 text-sm font-medium relative z-10 rounded transition-colors flex items-center justify-center gap-1.5 w-24",
+                                viewMode === 'charts' ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            onClick={() => setViewMode('charts')}
+                        >
+                            Charts <span className="text-[10px] bg-primary/10 text-primary px-1 rounded">Beta</span>
                         </button>
                     </div>
                     <div className="hidden lg:flex text-sm text-muted-foreground items-center gap-2">
@@ -150,82 +274,113 @@ const TracesPage = () => {
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="border rounded-lg overflow-x-auto bg-card">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground font-medium sticky top-0 z-10">
-                            <tr>
-                                <th className="px-6 py-3">Trace ID</th>
-                                <th className="px-6 py-3">Name</th>
-                                <th className="px-6 py-3">User ID</th>
-                                <th className="px-6 py-3">Tokens</th>
-                                <th className="px-6 py-3">Latency</th>
-                                <th className="px-6 py-3">Request time</th>
-                                <th className="px-6 py-3">State</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {paginatedTraces.map((trace, i) => (
-                                <tr
-                                    key={i}
-                                    onClick={() => setSelectedTrace(trace)}
-                                    className={cn(
-                                        "hover:bg-muted/80 transition-colors cursor-pointer",
-                                        selectedTrace?.id === trace.id ? "bg-muted/80" : ""
-                                    )}
-                                >
-                                    <td className="px-6 py-4 font-mono text-xs text-primary max-w-[120px] truncate" title={trace.id}>{trace.id}</td>
-                                    <td className="px-6 py-4 font-medium text-foreground">{trace.name}</td>
-                                    <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{trace.details.user_id}</td>
-                                    <td className="px-6 py-4 text-xs">{trace.details.tokens.total}</td>
-                                    <td className="px-6 py-4 text-xs">{trace.details.latency}</td>
-                                    <td className="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap">{trace.requestTime}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={cn(
-                                            "inline-flex items-center gap-1.5 text-xs font-medium",
-                                            trace.state === 'Error' ? "text-destructive" : "text-green-500"
-                                        )}>
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            {trace.state}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination Footer */}
-                <div className="flex justify-between items-center text-sm text-muted-foreground pt-2">
-                    <div className="flex items-center gap-2">
-                        <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, traces.length)} of {traces.length} results</span>
-                        <div className="h-4 w-px bg-border mx-2"></div>
-                        <span className="flex items-center gap-2 text-xs">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            Delta sync: Enabled
-                        </span>
+                {/* Dynamic Content Area (Logs vs Charts) */}
+                {viewMode === 'charts' ? (
+                    <div className="border rounded-lg bg-card p-8 flex flex-col items-center justify-center min-h-[400px] text-center border-dashed">
+                        <BarChart3 className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                        <h3 className="text-lg font-semibold mb-2">Analytics Dashboards <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">Beta</Badge></h3>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                            Visualize trace distributions, latency percentiles, and cost analytics over time. This feature is currently in active development.
+                        </p>
+                        <Button variant="default" onClick={() => setViewMode('logs')}>Return to Logs</Button>
                     </div>
-
-                    <div className="flex items-center gap-1">
-                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleFirstPage} disabled={currentPage === 1}>
-                            <ChevronsLeft className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handlePrevPage} disabled={currentPage === 1}>
-                            <ChevronLeft className="w-4 h-4" />
-                        </Button>
-
-                        <div className="flex items-center justify-center min-w-[3rem] px-2 font-medium text-foreground">
-                            {currentPage} / {totalPages}
+                ) : (
+                    <>
+                        {/* Table */}
+                        <div className="border rounded-lg overflow-x-auto bg-card relative min-h-[400px]">
+                            {isRefreshing && (
+                                <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-20 flex items-center justify-center">
+                                    <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+                                </div>
+                            )}
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-muted/50 text-muted-foreground font-medium sticky top-0 z-10">
+                                    <tr>
+                                        {visibleColumns.id && <th className="px-6 py-3">Trace ID</th>}
+                                        {visibleColumns.name && <th className="px-6 py-3">Name</th>}
+                                        {visibleColumns.userId && <th className="px-6 py-3">User ID</th>}
+                                        {visibleColumns.tokens && <th className="px-6 py-3">Tokens</th>}
+                                        {visibleColumns.latency && <th className="px-6 py-3">Latency</th>}
+                                        {visibleColumns.requestTime && <th className="px-6 py-3">Request time</th>}
+                                        {visibleColumns.state && <th className="px-6 py-3">State</th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {paginatedTraces.length > 0 ? (
+                                        paginatedTraces.map((trace, i) => (
+                                            <tr
+                                                key={i}
+                                                onClick={() => setSelectedTrace(trace)}
+                                                className={cn(
+                                                    "hover:bg-muted/80 transition-colors cursor-pointer",
+                                                    selectedTrace?.id === trace.id ? "bg-muted/80" : ""
+                                                )}
+                                            >
+                                                {visibleColumns.id && <td className="px-6 py-4 font-mono text-xs text-primary max-w-[120px] truncate" title={trace.id}>{trace.id}</td>}
+                                                {visibleColumns.name && <td className="px-6 py-4 font-medium text-foreground">{trace.name}</td>}
+                                                {visibleColumns.userId && <td className="px-6 py-4 font-mono text-xs text-muted-foreground">{trace.details.user_id}</td>}
+                                                {visibleColumns.tokens && <td className="px-6 py-4 text-xs">{trace.details.tokens.total}</td>}
+                                                {visibleColumns.latency && <td className="px-6 py-4 text-xs">{trace.details.latency}</td>}
+                                                {visibleColumns.requestTime && <td className="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap">{trace.requestTime}</td>}
+                                                {visibleColumns.state && (
+                                                    <td className="px-6 py-4">
+                                                        <span className={cn(
+                                                            "inline-flex items-center gap-1.5 text-xs font-medium",
+                                                            trace.state === 'Error' ? "text-destructive" : "text-green-500"
+                                                        )}>
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                            {trace.state}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                                                No traces found for the active filters.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
 
-                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleNextPage} disabled={currentPage === totalPages}>
-                            <ChevronRight className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={handleLastPage} disabled={currentPage === totalPages}>
-                            <ChevronsRight className="w-4 h-4" />
-                        </Button>
-                    </div>
-                </div>
+                        {/* Pagination Footer */}
+                        <div className="flex justify-between items-center text-sm text-muted-foreground pt-2">
+                            {filteredTraces.length > 0 ? (
+                                <>
+                                    <div className="flex items-center gap-2">
+                                        <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredTraces.length)} of {filteredTraces.length} results</span>
+                                        {statusFilter !== 'All' && <Badge variant="secondary" className="ml-2">Filtered</Badge>}
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                                            <ChevronsLeft className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => setCurrentPage(prev => prev - 1)} disabled={currentPage === 1}>
+                                            <ChevronLeft className="w-4 h-4" />
+                                        </Button>
+
+                                        <div className="flex items-center justify-center min-w-[3rem] px-2 font-medium text-foreground">
+                                            {currentPage} / {totalPages}
+                                        </div>
+
+                                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage === totalPages}>
+                                            <ChevronRight className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" className="w-8 h-8" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                                            <ChevronsRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="w-full text-center py-2">Adjust filters to see results.</div>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Slide-out Sidebar - Advanced Langfuse Style */}
