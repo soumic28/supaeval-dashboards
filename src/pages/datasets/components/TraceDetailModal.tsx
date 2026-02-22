@@ -114,7 +114,7 @@ const buildTraceTree = (spans: Span[]): TraceSpan | null => {
 
     return {
         id: 'root-synthetic',
-        name: 'Full Trace Session',
+        name: 'Full Prompt Session',
         type: 'system',
         startTime: minStart,
         duration: maxEnd - minStart,
@@ -131,7 +131,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_unhealthy' || (promptId && promptId.includes('fail'))) {
         return {
             id: `root-${promptId}`,
-            name: 'RAG Evaluation Run (Hallucination)',
+            name: 'Evaluation Run (Failed)',
             type: 'system',
             startTime: 0,
             duration: 2.1,
@@ -214,7 +214,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
         return {
             id: `root-${promptId}`,
             // ... (keep existing Scenario 2 content if needed, but for now I will just target the gap between Scenario 2 and Default to insert Scenario 3 & 4)
-            name: 'Agent Tool Execution (Failed)',
+            name: 'Prompt Execution (Failed)',
             type: 'system',
             startTime: 0,
             duration: 1.5,
@@ -278,7 +278,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_planning' || (promptId && promptId.includes('plan'))) {
         return {
             id: `root-${promptId}`,
-            name: 'Complex Reasoning Agent (Loop)',
+            name: 'Complex Prompt Chain (Loop)',
             type: 'system',
             startTime: 0,
             duration: 5.5,
@@ -298,7 +298,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 "layer_1_analyze": { complexity: "high", requires_tool: true }
             },
             inputs: { query: 'Calculate the square root of the sum of the first 100 primes.' },
-            outputs: { error: "MaxRetryExceeded: Agent stuck in planning loop" },
+            outputs: { error: "MaxRetryExceeded: Stuck in planning loop" },
             children: [
                 {
                     id: 'layer_1_analyze',
@@ -332,7 +332,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_security' || (promptId && promptId.includes('sec'))) {
         return {
             id: `root-${promptId}`,
-            name: 'Public Chatbot (Blocked)',
+            name: 'Evaluation Run (Blocked)',
             type: 'system',
             startTime: 0,
             duration: 0.1,
@@ -373,14 +373,14 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     // Default Scenario: Complex Agent Run (Success & Reviewed)
     return {
         id: `root-${promptId}`,
-        name: 'Evaluation Run (Reviewed)',
+        name: 'Prompt Execution (Reviewed)',
         type: 'system',
         startTime: 0,
         duration: 4.25,
         status: 'success',
         isReviewed: true,
         isUnhealthy: false,
-        taskSequence: ['Intent Recognition', 'Plan Generation', 'Information Retrieval', 'Response Synthesis'],
+        taskSequence: ['System Instructions', 'Context Assembly', 'Variable Injection', 'LLM Call'],
         successCriteria: [
             'Identify user intent correctly as "BookFlight"',
             'Retrieve at least 2 relevant policy documents',
@@ -404,7 +404,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
         children: [
             {
                 id: 'layer_1_input',
-                name: '1. Input & Intent Layer',
+                name: '1. System Prompt & Guardrails',
                 type: 'layer',
                 layerType: 'input',
                 startTime: 0.1,
@@ -419,7 +419,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l1_step_1',
-                        name: 'Intent Classifier',
+                        name: 'Load Base Instructions',
                         type: 'llm',
                         startTime: 0.1,
                         duration: 0.1,
@@ -429,7 +429,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                     },
                     {
                         id: 'l1_step_2',
-                        name: 'Guardrails Check',
+                        name: 'Inject Guardrails',
                         type: 'step',
                         startTime: 0.2,
                         duration: 0.05,
@@ -441,7 +441,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_2_planning',
-                name: '2. Planning & Reasoning Layer',
+                name: '2. Context & Few-shots',
                 type: 'layer',
                 layerType: 'planning',
                 startTime: 0.3,
@@ -455,7 +455,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l2_step_1',
-                        name: 'Planner Agent',
+                        name: 'Retrieve Examples',
                         type: 'llm',
                         startTime: 0.3,
                         duration: 0.4,
@@ -467,7 +467,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_3_retrieval',
-                name: '3. Retrieval & Context Layer',
+                name: '3. Variable Interpolation',
                 type: 'layer',
                 layerType: 'retrieval',
                 startTime: 0.8,
@@ -481,7 +481,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l3_step_1',
-                        name: 'Vector Search',
+                        name: 'Inject User Query',
                         type: 'retriever',
                         startTime: 0.8,
                         duration: 0.2,
@@ -493,7 +493,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_4_memory',
-                name: '4. Memory Layer',
+                name: '4. Memory Injection',
                 type: 'layer',
                 layerType: 'memory',
                 startTime: 1.15,
@@ -508,7 +508,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_5_tool',
-                name: '5. Tool & Action Layer',
+                name: '5. Tool Binding',
                 type: 'layer',
                 layerType: 'tool',
                 startTime: 1.3,
@@ -519,7 +519,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l5_step_1',
-                        name: 'FlightAPI.search',
+                        name: 'Bind Function Tools',
                         type: 'tool',
                         startTime: 1.3,
                         duration: 1.4,
@@ -531,7 +531,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_6_generation',
-                name: '6. Generation Layer',
+                name: '6. LLM Execution',
                 type: 'layer',
                 layerType: 'generation',
                 startTime: 2.9,
@@ -542,7 +542,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l6_step_1',
-                        name: 'Response Synthesizer',
+                        name: 'Model API Call',
                         type: 'llm',
                         startTime: 2.9,
                         duration: 0.8,
@@ -554,7 +554,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_7_system',
-                name: '7. System Layer',
+                name: '7. Output Validation',
                 type: 'layer',
                 layerType: 'system',
                 startTime: 3.8,
