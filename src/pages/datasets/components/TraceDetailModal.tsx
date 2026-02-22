@@ -845,7 +845,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                 <div className="bg-background w-full h-full max-w-[1600px] max-h-[90vh] border rounded-xl shadow-2xl flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <Activity className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Loading trace details...</p>
+                        <p className="text-muted-foreground">Loading prompt listing tree...</p>
                     </div>
                 </div>
             </div>
@@ -863,7 +863,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                             <Activity className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold leading-none">Trace Details</h2>
+                            <h2 className="text-lg font-bold leading-none">Prompt Listing Tree</h2>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded-sm">ID: {promptId}</span>
                                 <Badge variant="outline" className="text-[10px] h-5 border-green-200 bg-green-50 text-green-700 gap-1 pl-1 pr-2">
@@ -944,8 +944,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                             {selectedSpan.duration.toFixed(3)}s
                                         </Badge>
                                         <Button size="sm" variant="outline" className="gap-2 h-8">
-                                            <Activity className="w-3.5 h-3.5" />
-                                            Assessments
+                                            Save
                                         </Button>
                                     </div>
                                 </div>
@@ -978,13 +977,6 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                                         ) : (
                                                             <div className="text-xs text-muted-foreground italic px-2">No inputs available</div>
                                                         )}
-
-                                                        <div className="flex justify-end pt-2">
-                                                            <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200">
-                                                                <Play className="w-3.5 h-3.5 fill-current" />
-                                                                Run
-                                                            </Button>
-                                                        </div>
                                                     </div>
                                                 </CollapsibleSection>
 
@@ -1137,7 +1129,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                                     <Activity className="w-8 h-8 opacity-50" />
                                 </div>
-                                <h3 className="text-lg font-medium text-foreground">Select a Trace Step</h3>
+                                <h3 className="text-lg font-medium text-foreground">Select a Step</h3>
                                 <p className="text-sm max-w-[250px] mt-2">Click on any step in the execution tree on the left to view details.</p>
                             </div>
                         )}
