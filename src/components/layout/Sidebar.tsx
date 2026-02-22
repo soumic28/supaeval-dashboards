@@ -70,7 +70,7 @@ const navItems: NavItem[] = [
         children: [
             { name: 'Cost Analysis', path: '/resource/cost' },
             { name: 'Pricing Tier', path: '/resource/pricing' },
-            { name: 'Usage Management', path: '/resource/usage' },
+            { name: 'Usage management', path: '/resource/usage' },
         ]
     },
     { name: 'Metrics', icon: BarChart2, path: '/metrics' },
