@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { X, ChevronRight, ChevronDown, Hammer, Search, Activity, Copy, Play, Check, Brain, Database, MessageSquare, Cpu, AlertTriangle, FileText, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Hammer, Search, Activity, Copy, Check, Brain, Database, MessageSquare, Cpu, AlertTriangle, FileText, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { traceService } from "@/services/traces";

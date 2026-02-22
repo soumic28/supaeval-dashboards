@@ -506,10 +506,10 @@ const DatasetDetailPage = () => {
                         <p className="text-muted-foreground mt-1">{datasetInfo.desc}</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="icon" title="Edit Dataset">
+                        <Button variant="outline" size="icon" title="Edit Dataset" onClick={() => toast({ title: "Edit Dataset", description: "This feature is currently in development." })}>
                             <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="icon" title="Delete Dataset" className="hover:text-red-600 hover:border-red-200 hover:bg-red-50">
+                        <Button variant="outline" size="icon" title="Delete Dataset" className="hover:text-red-600 hover:border-red-200 hover:bg-red-50" onClick={() => toast({ title: "Delete Dataset", description: "This feature is currently in development.", variant: "destructive" })}>
                             <Trash2 className="w-4 h-4" />
                         </Button>
                         <Button variant="outline" onClick={() => handleExport('json')}>
@@ -559,7 +559,7 @@ const DatasetDetailPage = () => {
                             className="pl-8"
                         />
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => toast({ title: "Filters", description: "Advanced filtering coming soon." })}>
                         <Filter className="w-4 h-4 mr-2" />
                         Filter
                     </Button>
