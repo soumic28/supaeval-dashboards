@@ -337,22 +337,25 @@ const TracesPage = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 relative">
-                        <div className="flex items-center rounded-md border bg-card shadow-sm">
+                    <div className="flex items-center gap-3 w-full sm:w-auto relative z-20">
+                        <div className="flex items-center rounded-md border border-input bg-card shadow-sm h-9 w-full sm:w-auto">
                             <Button
                                 variant="ghost"
                                 className={cn(
-                                    "h-9 whitespace-nowrap text-muted-foreground font-normal hidden md:flex border-0 hover:bg-muted/50 rounded-r-none",
-                                    showTimeRangeDropdown && "bg-muted text-foreground"
+                                    "h-full whitespace-nowrap text-muted-foreground font-normal flex hover:bg-muted/50 border-0 focus-visible:ring-0 w-full sm:w-auto justify-between sm:justify-center",
+                                    showTimeRangeDropdown && "bg-muted text-foreground",
+                                    "xl:rounded-r-none"
                                 )}
                                 onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
                             >
-                                <Calendar className="w-4 h-4 mr-2 text-foreground" />
-                                <span className="text-foreground font-medium mr-1">Time Range:</span> {selectedTimeRange}
+                                <div className="flex items-center">
+                                    <Calendar className="w-4 h-4 mr-2 text-foreground" />
+                                    <span className="text-foreground font-medium mr-1">Time Range:</span> {selectedTimeRange}
+                                </div>
                                 <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
                             </Button>
 
-                            <div className="hidden xl:flex text-xs text-muted-foreground items-center gap-2 bg-muted/20 px-3 h-9 border-l">
+                            <div className="hidden xl:flex text-xs text-muted-foreground items-center gap-2 bg-muted/20 px-3 h-full border-l border-input">
                                 <span className="whitespace-nowrap">Start: {displayStart}</span>
                                 <span className="h-3 w-px bg-border"></span>
                                 <span className="whitespace-nowrap">End: {displayEnd}</span>
@@ -362,7 +365,7 @@ const TracesPage = () => {
                         {showTimeRangeDropdown && (
                             <>
                                 <div className="fixed inset-0 z-30" onClick={() => setShowTimeRangeDropdown(false)}></div>
-                                <div className="absolute top-10 left-0 w-48 bg-card border rounded-md shadow-lg z-40 p-1">
+                                <div className="absolute top-10 left-0 w-full sm:w-48 bg-card border rounded-md shadow-lg z-40 p-1">
                                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Select Range</div>
                                     {['Last 1 hour', 'Last 24 hours', 'Last 7 days', 'Last 30 days', 'Custom'].map(opt => (
                                         <button
