@@ -15,8 +15,18 @@ export interface AgentAuth {
 
 export interface TestUser {
   id: string;
-  name: string;
-  email: string;
+  name: string; // Used as Username in the UI
+  email?: string;
+  memory?: string;
+  context?: string;
+  attributes?: {
+    chatHistory?: string;
+    longTermMem?: string;
+    userType?: string;
+    riskLevel?: string;
+    queryComplexity?: string;
+    intentType?: string;
+  };
 }
 
 export interface AgentMemory {

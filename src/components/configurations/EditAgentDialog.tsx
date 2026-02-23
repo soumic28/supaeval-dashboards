@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
 import { Save, Plus, Trash2, UserPlus, Brain, Database, Wrench, Users, Plug, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
 import type { Agent, AgentCategory, AgentEndpoint, TestUser, AgentMemory } from '@/types/AgentTypes';
 
 interface EditAgentDialogProps {
@@ -76,6 +77,7 @@ export function EditAgentDialog({
     onSave,
 }: EditAgentDialogProps) {
     const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
+    const [isTestUserDialogOpen, setIsTestUserDialogOpen] = useState(false);
 
     useEffect(() => {
         if (agent) {
@@ -159,17 +161,17 @@ export function EditAgentDialog({
         });
     };
 
-    const addTestUser = () => {
+    const handleAddTestUserClick = () => {
+        setIsTestUserDialogOpen(true);
+    };
+
+    const handleSaveTestUser = (newTestUser: TestUser) => {
         if (!editedAgent) return;
-        const newTestUser: TestUser = {
-            id: Date.now().toString(),
-            name: '',
-            email: ''
-        };
         setEditedAgent({
             ...editedAgent,
             testUsers: [...(editedAgent.testUsers || []), newTestUser]
         });
+        setIsTestUserDialogOpen(false);
     };
 
     const removeTestUser = (id: string) => {
@@ -177,16 +179,6 @@ export function EditAgentDialog({
         setEditedAgent({
             ...editedAgent,
             testUsers: (editedAgent.testUsers || []).filter(user => user.id !== id)
-        });
-    };
-
-    const updateTestUser = (id: string, field: keyof TestUser, value: string) => {
-        if (!editedAgent) return;
-        setEditedAgent({
-            ...editedAgent,
-            testUsers: (editedAgent.testUsers || []).map(user =>
-                user.id === id ? { ...user, [field]: value } : user
-            )
         });
     };
 
@@ -458,7 +450,7 @@ export function EditAgentDialog({
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={addTestUser}
+                                        onClick={handleAddTestUserClick}
                                         className="h-7 text-xs"
                                     >
                                         <UserPlus className="h-3 w-3 mr-1" />
@@ -469,20 +461,13 @@ export function EditAgentDialog({
                                 <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
                                     {(editedAgent.testUsers || []).map((user) => (
                                         <div key={user.id} className="flex gap-2 items-start p-2 border rounded-lg bg-muted/30">
-                                            <div className="flex-1 space-y-2">
-                                                <Input
-                                                    value={user.name}
-                                                    onChange={(e) => updateTestUser(user.id, 'name', e.target.value)}
-                                                    placeholder="Name"
-                                                    className="w-full h-8 text-xs"
-                                                />
-                                                <Input
-                                                    type="email"
-                                                    value={user.email}
-                                                    onChange={(e) => updateTestUser(user.id, 'email', e.target.value)}
-                                                    placeholder="Email"
-                                                    className="w-full h-8 text-xs"
-                                                />
+                                            <div className="flex-1 space-y-1">
+                                                <p className="text-sm font-medium">{user.name}</p>
+                                                <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                                                    {user.attributes?.userType && <span>Type: {user.attributes.userType}</span>}
+                                                    {user.attributes?.riskLevel && <span>Risk: {user.attributes.riskLevel}</span>}
+                                                    {user.attributes?.intentType && <span>Intent: {user.attributes.intentType}</span>}
+                                                </div>
                                             </div>
                                             <Button
                                                 type="button"
@@ -558,6 +543,13 @@ export function EditAgentDialog({
                     </Button>
                 </DialogFooter>
             </DialogContent>
+
+            <AddTestUserDialog
+                open={isTestUserDialogOpen}
+                onOpenChange={setIsTestUserDialogOpen}
+                agentName={editedAgent.name}
+                onSave={handleSaveTestUser}
+            />
         </Dialog>
     );
 }

@@ -13,6 +13,7 @@ import {
 import { Bot, Plus, Trash2, AlertCircle, Zap, MoreVertical, Edit2, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditAgentDialog } from '@/components/configurations/EditAgentDialog';
+import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
 import type { Agent } from '@/types/AgentTypes';
 import { agentService } from '@/services/agents';
 
@@ -25,6 +26,9 @@ export default function AgentConfigPage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+
+    const [isTestUserDialogOpen, setIsTestUserDialogOpen] = useState(false);
+    const [agentForTestUser, setAgentForTestUser] = useState<Agent | null>(null);
 
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -225,7 +229,8 @@ export default function AgentConfigPage() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // TODO: Add test user logic
+                                                                    setAgentForTestUser(agent);
+                                                                    setIsTestUserDialogOpen(true);
                                                                     setOpenMenuId(null);
                                                                 }}
                                                                 className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
@@ -351,6 +356,13 @@ export default function AgentConfigPage() {
                 onOpenChange={setIsEditDialogOpen}
                 agent={selectedAgent}
                 onSave={handleSaveAgent}
+            />
+
+            {/* Add Test User Dialog */}
+            <AddTestUserDialog
+                open={isTestUserDialogOpen}
+                onOpenChange={setIsTestUserDialogOpen}
+                agentName={agentForTestUser?.name}
             />
 
             {/* Delete Confirmation Dialog */}
