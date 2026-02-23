@@ -8,6 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Loader2, Calendar } from 'lucide-react';
 import { Switch } from '@/components/ui/Switch';
 import { Input } from '@/components/ui/Input';
+import { agentService } from '@/services/agents';
+import { datasetService } from '@/services/datasets';
+import { evalConfigService } from '@/services/eval-configs';
+import { runService } from '@/services/runs';
 
 interface NewRunModalProps {
     open: boolean;
@@ -39,9 +43,6 @@ export function NewRunModal({ open, onOpenChange }: NewRunModalProps) {
             const fetchOptions = async () => {
                 setIsFetchingOptions(true);
                 try {
-                    const { agentService } = await import("@/services/agents");
-                    const { datasetService } = await import("@/services/datasets");
-                    const { evalConfigService } = await import("@/services/eval-configs");
 
                     const [agentsData, datasetsData, configsData] = await Promise.all([
                         agentService.getAll().catch(() => []),
@@ -78,7 +79,6 @@ export function NewRunModal({ open, onOpenChange }: NewRunModalProps) {
 
         setIsLoading(true);
         try {
-            const { runService } = await import("@/services/runs");
 
             // Construct Payload
             const payload: any = {

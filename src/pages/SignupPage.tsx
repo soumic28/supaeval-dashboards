@@ -9,8 +9,6 @@ import { AlertCircle, Loader2, Check, Terminal, Cpu, Eye, EyeOff } from 'lucide-
 import { motion } from 'framer-motion';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useAuth } from '@/contexts/AuthContext';
-import { tenantService } from '@/services/tenants';
-import { workspaceService } from '@/services/workspaces';
 
 export default function SignupPage() {
     const navigate = useNavigate();
@@ -60,23 +58,9 @@ export default function SignupPage() {
                 const fullName = `${data.firstName} ${data.lastName}`.trim();
                 await signup({ email: data.email, password: data.password, name: fullName });
 
-                // Create organization components using newly acquired auth session
-                if (data.companyName) {
-                    const tenantSlug = data.companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
-                    const tenant = await tenantService.create({ name: data.companyName, slug: tenantSlug });
-
-                    if (tenant && tenant.id) {
-                        await workspaceService.create({
-                            name: `${data.companyName} Workspace`,
-                            slug: `${tenantSlug}-workspace`,
-                            tenant_id: tenant.id
-                        });
-                    }
-                }
-
                 setSuccess(true);
                 setTimeout(() => {
-                    navigate("/");
+                    navigate("/onboarding/tenant");
                 }, 2000);
             }
         } catch (err: any) {
