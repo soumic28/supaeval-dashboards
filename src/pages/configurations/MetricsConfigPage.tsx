@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -10,7 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/Dialog';
-import { BarChart2, Plus, Settings, Trash2, AlertCircle } from 'lucide-react';
+import { BarChart2, Plus, Trash2, AlertCircle, MoreVertical, Edit2, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditMetricSetDialog } from '@/components/configurations/EditMetricSetDialog';
 import type { MetricSet } from '@/types/MetricTypes';
@@ -78,6 +78,18 @@ export default function MetricsConfigPage() {
     ]);
 
     const [selectedMetricSet, setSelectedMetricSet] = useState<MetricSet | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [metricSetToDelete, setMetricSetToDelete] = useState<MetricSet | null>(null);
@@ -154,23 +166,67 @@ export default function MetricsConfigPage() {
                                             {set.name}
                                         </CardTitle>
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 relative" ref={openMenuId === set.id ? menuRef : null}>
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
-                                            onClick={() => handleEditMetricSet(set)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(openMenuId === set.id ? null : set.id);
+                                            }}
                                             className="p-1.5 rounded-md hover:bg-muted transition-colors"
                                         >
-                                            <Settings className="h-4 w-4 text-muted-foreground" />
+                                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                         </motion.button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={(e) => handleDeleteClick(set, e)}
-                                            className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </motion.button>
+
+                                        <AnimatePresence>
+                                            {openMenuId === set.id && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className="absolute right-0 top-8 z-50 min-w-[160px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditMetricSet(set);
+                                                                setOpenMenuId(null);
+                                                            }}
+                                                            className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                        >
+                                                            <Edit2 className="mr-2 h-4 w-4" />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                // TODO: Add test user logic
+                                                                setOpenMenuId(null);
+                                                            }}
+                                                            className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                        >
+                                                            <UserPlus className="mr-2 h-4 w-4" />
+                                                            <span>Add test user</span>
+                                                        </button>
+                                                        <div className="h-px bg-border my-1 mx-1" />
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteClick(set, e);
+                                                                setOpenMenuId(null);
+                                                            }}
+                                                            className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-destructive/10 text-destructive focus:bg-destructive focus:text-destructive-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <span>Delete</span>
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </CardHeader>
                                 <CardContent onClick={() => handleEditMetricSet(set)}>
