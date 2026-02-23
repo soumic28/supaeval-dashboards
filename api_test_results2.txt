@@ -1,0 +1,2 @@
+T3 (old payload): 500 Internal Server Error
+T4 (trailing slash): 401 {"detail":"Not authenticated"}
