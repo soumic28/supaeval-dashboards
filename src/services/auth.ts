@@ -6,6 +6,15 @@ export const authService = {
     return apiClient.post<any, AuthResponse>("/auth/login", credentials);
   },
 
+  signup: async (credentials: {
+    email: string;
+    password?: string;
+    name?: string;
+  }) => {
+    // API returns user_id, access_token, token_type
+    return apiClient.post<any, any>("/auth/signup", credentials);
+  },
+
   logout: async () => {
     return apiClient.post("/auth/logout");
   },
