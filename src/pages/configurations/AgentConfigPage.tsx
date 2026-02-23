@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -10,7 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/Dialog';
-import { Bot, Plus, Settings, Trash2, AlertCircle, Zap } from 'lucide-react';
+import { Bot, Plus, Trash2, AlertCircle, Zap, MoreVertical, Edit2, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditAgentDialog } from '@/components/configurations/EditAgentDialog';
 import type { Agent } from '@/types/AgentTypes';
@@ -25,6 +25,19 @@ export default function AgentConfigPage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const fetchAgents = async () => {
         try {
@@ -175,23 +188,67 @@ export default function AgentConfigPage() {
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-1 relative" ref={openMenuId === agent.id ? menuRef : null}>
                                             <motion.button
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                onClick={() => handleEditAgent(agent)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(openMenuId === agent.id ? null : agent.id);
+                                                }}
                                                 className="p-1.5 rounded-md hover:bg-muted transition-colors"
                                             >
-                                                <Settings className="h-4 w-4 text-muted-foreground" />
+                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                             </motion.button>
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={(e) => handleDeleteClick(agent, e)}
-                                                className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </motion.button>
+
+                                            <AnimatePresence>
+                                                {openMenuId === agent.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="absolute right-0 top-8 z-50 min-w-[160px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none"
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditAgent(agent);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    // TODO: Add test user logic
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <UserPlus className="mr-2 h-4 w-4" />
+                                                                <span>Add test user</span>
+                                                            </button>
+                                                            <div className="h-px bg-border my-1 mx-1" />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteClick(agent, e);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-destructive/10 text-destructive focus:bg-destructive focus:text-destructive-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Delete</span>
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </CardHeader>
                                     <CardContent onClick={() => handleEditAgent(agent)}>
