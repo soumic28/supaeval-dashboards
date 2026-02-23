@@ -73,8 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         try {
             await authService.signup(credentials);
-            // We intentionally do NOT set the token here or fetch the profile.
-            // The user will be redirected to the login page to explicitly log in.
+            // Automatically log in the user after successful signup
+            if (credentials.email && credentials.password) {
+                await login({ email: credentials.email, password: credentials.password });
+            }
         } catch (error) {
             console.error("Signup failed", error);
             throw error;

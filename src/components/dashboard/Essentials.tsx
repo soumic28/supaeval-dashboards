@@ -13,7 +13,7 @@ export function Essentials() {
     const { user } = useAuth();
     const { workspaces } = useWorkspaces();
 
-    const activeWorkspace = workspaces?.find(w => w.id === user?.workspace_id);
+    const activeWorkspace = workspaces?.find(w => w.id === user?.workspace_id) || workspaces?.[0];
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
