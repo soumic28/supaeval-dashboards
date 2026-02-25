@@ -11,6 +11,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     login: (credentials: { email: string; password?: string }) => Promise<void>;
+    signup: (credentials: { email: string; password?: string; name?: string }) => Promise<void>;
     logout: () => Promise<void>;
     refreshProfile: () => Promise<void>;
     updateUser: (user: User) => void;
@@ -62,6 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
         } catch (error) {
             console.error("Login failed", error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const signup = async (credentials: { email: string; password?: string; name?: string }) => {
+        setIsLoading(true);
+        try {
+            await authService.signup(credentials);
+            // Automatically log in the user after successful signup
+            if (credentials.email && credentials.password) {
+                await login({ email: credentials.email, password: credentials.password });
+            }
+        } catch (error) {
+            console.error("Signup failed", error);
             throw error;
         } finally {
             setIsLoading(false);
@@ -139,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAuthenticated: !!token,
                 isLoading,
                 login,
+                signup,
                 logout,
                 refreshProfile,
                 updateUser

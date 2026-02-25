@@ -27,7 +27,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
     const { switchWorkspace, isSwitching } = useWorkspaceActions();
 
     const [name, setName] = useState('');
-    const [slug, setSlug] = useState('');
+    const [description, setDescription] = useState('');
     const [tenants, setTenants] = useState<any[]>([]);
     const [selectedTenantId, setSelectedTenantId] = useState<string>('');
     const [isLoadingTenants, setIsLoadingTenants] = useState(false);
@@ -60,17 +60,12 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
     }, [open, user]);
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newName = e.target.value;
-        setName(newName);
-        // Auto-generate slug from name if slug hasn't been manually edited (simple heuristic)
-        if (!slug || slug === name.toLowerCase().replace(/\s+/g, '-').slice(0, -1)) {
-            setSlug(newName.toLowerCase().replace(/\s+/g, '-'));
-        }
+        setName(e.target.value);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !slug) return;
+        if (!name) return;
 
         const tenantIdToUse = selectedTenantId || user?.tenant_id;
 
@@ -79,7 +74,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
             return;
         }
 
-        const payload: any = { name, slug, tenant_id: tenantIdToUse };
+        const payload: any = { name, description, settings: { additionalProp1: {} }, tenant_id: tenantIdToUse };
 
         createWorkspace(payload, {
             onSuccess: async (data: any) => {
@@ -98,7 +93,7 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
                 // Close modal and reset form
                 onOpenChange(false);
                 setName('');
-                setSlug('');
+                setDescription('');
             }
         });
     };
@@ -143,24 +138,20 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="slug">Slug</Label>
+                            <Label htmlFor="description">Description</Label>
                             <Input
-                                id="slug"
-                                value={slug}
-                                onChange={(e) => setSlug(e.target.value)}
-                                placeholder="my-awesome-workspace"
-                                required
+                                id="description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Workspace for my awesome project"
                             />
-                            <p className="text-xs text-muted-foreground">
-                                Used in URLs. Must be unique.
-                            </p>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isCreating || isSwitching || !name || !slug || !selectedTenantId}>
+                        <Button type="submit" disabled={isCreating || isSwitching || !name || !selectedTenantId}>
                             {(isCreating || isSwitching) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isSwitching ? 'Switching...' : 'Create Workspace'}
                         </Button>

@@ -323,8 +323,8 @@ export function EditMetricSetDialog({
                                                                                         )
                                                                                     }
                                                                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border-2 ${metric.type === type
-                                                                                            ? 'bg-primary text-primary-foreground border-primary shadow-md'
-                                                                                            : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                                                                                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                                                                        : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                                                                                         }`}
                                                                                 >
                                                                                     {type}
@@ -335,7 +335,7 @@ export function EditMetricSetDialog({
 
                                                                     {/* Default Template */}
                                                                     <div className="space-y-2">
-                                                                        <Label>Load Default Template (Optional)</Label>
+                                                                        <Label>Load Default Template</Label>
                                                                         <Select
                                                                             onChange={(e) => {
                                                                                 if (e.target.value) {

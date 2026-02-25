@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Sample Tenant",
+    "slug": "aeg5-6s1yho4awz9yklap93ryblhmc-6x9fqeikuid6369l1qkb8l9lxps5wdf26pex8ob8",
+    "settings": {
+      "additionalProp1": {}
+    },
+    "id": "30552023-c87b-4754-b392-895008a31ff0",
+    "is_active": true,
+    "created_at": "2026-02-01T11:25:46.448590Z",
+    "updated_at": "2026-02-01T11:25:46.448590Z"
+  },
+  {
+    "name": "string",
+    "slug": "snx7tn7eaiz2pg2bh-1za6qj4pc4ec4pt8bmtz34q27g3th2e2e",
+    "settings": {
+      "additionalProp1": {}
+    },
+    "id": "3db719fb-0cbc-4778-a8a0-a9504c827793",
+    "is_active": true,
+    "created_at": "2026-02-02T10:30:39.465752Z",
+    "updated_at": "2026-02-02T10:30:39.465752Z"
+  },
+  {
+    "name": "newname",
+    "slug": "newname",
+    "settings": {},
+    "id": "360c7e06-e3d3-4969-ba63-6f7563b7e659",
+    "is_active": true,
+    "created_at": "2026-02-16T06:10:12.605886Z",
+    "updated_at": "2026-02-16T06:10:12.605886Z"
+  },
+  {
+    "name": "asd",
+    "slug": "asd",
+    "settings": {},
+    "id": "6b587612-fd5e-4cff-b4ea-e9eaedcce880",
+    "is_active": true,
+    "created_at": "2026-02-18T12:59:42.993647Z",
+    "updated_at": "2026-02-18T12:59:42.993647Z"
+  },
+  {
+    "name": "TestUser",
+    "slug": "testuser",
+    "settings": {},
+    "id": "0603e12a-e622-4416-a21b-82d9bd81ea52",
+    "is_active": true,
+    "created_at": "2026-02-18T13:07:02.419609Z",
+    "updated_at": "2026-02-18T13:07:02.419609Z"
+  },
+  {
+    "name": "Hhhd",
+    "slug": "hhh",
+    "settings": {},
+    "id": "485f05ba-563d-4944-b7c6-2da97d7a9212",
+    "is_active": true,
+    "created_at": "2026-02-20T13:34:14.538289Z",
+    "updated_at": "2026-02-20T13:34:14.538289Z"
+  },
+  {
+    "name": "testImran",
+    "slug": "testimran",
+    "settings": {},
+    "id": "d370790a-5b93-4623-9884-8e1daed731a0",
+    "is_active": true,
+    "created_at": "2026-02-21T04:43:44.760565Z",
+    "updated_at": "2026-02-21T04:43:44.760565Z"
+  },
+  {
+    "name": "jkbjk",
+    "slug": "jkbjk",
+    "settings": {},
+    "id": "7eca061d-4ec1-4c0c-b50e-3540789dcd88",
+    "is_active": true,
+    "created_at": "2026-02-21T06:02:41.504479Z",
+    "updated_at": "2026-02-21T06:02:41.504479Z"
+  },
+  {
+    "name": "dsvds",
+    "slug": "dsvds",
+    "settings": {},
+    "id": "51267ae2-5ac2-4b8d-bd70-874fd4d6c66b",
+    "is_active": true,
+    "created_at": "2026-02-21T06:06:59.483649Z",
+    "updated_at": "2026-02-21T06:06:59.483649Z"
+  },
+  {
+    "name": "SupaEval",
+    "slug": "dc7kud9yytn3tahc",
+    "settings": {
+      "additionalProp1": {}
+    },
+    "id": "ccd73d02-0ce2-4f6f-a8f5-d5db9f341c45",
+    "is_active": true,
+    "created_at": "2026-02-22T12:23:49.751541Z",
+    "updated_at": "2026-02-22T12:23:49.751541Z"
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Name"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Description"
+    },
+    "settings": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Settings"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Tenant Id"
+    }
+  },
+  "type": "object",
+  "required": [
+    "name",
+    "tenant_id"
+  ],
+  "title": "WorkspaceCreate",
+  "description": "Schema for creating a Workspace."
+}

@@ -26,6 +26,8 @@ import {
     DialogTitle,
 } from "@/components/ui/Dialog";
 import { NewRunModal } from '@/components/evaluations/NewRunModal';
+import { datasetService } from '@/services/datasets';
+import { promptService } from '@/services/prompts';
 
 interface Dataset {
     id: string | number;
@@ -69,9 +71,6 @@ const MyDatasetsPage = () => {
     // Fetch Data Logic
     const fetchDatasets = async () => {
         try {
-            const { datasetService } = await import("@/services/datasets");
-            const { promptService } = await import("@/services/prompts"); // Import prompt service
-
             const apiDatasets = await datasetService.getAll();
 
             if (apiDatasets && Array.isArray(apiDatasets)) {
@@ -93,7 +92,7 @@ const MyDatasetsPage = () => {
                         type: d.type || "Custom",
                         layersCovered: "General",
                         prompts: count, // Use fetched count
-                        complexity: "Medium" as "Medium", // Explicit cast to match union type
+                        complexity: "Medium" as "Medium",
                         runs: 0,
                         humanReviewed: d.human_reviewed || false, // Map from API
                         turnType: "Single",
@@ -101,13 +100,10 @@ const MyDatasetsPage = () => {
                     };
                 }));
 
-                // Real datasets first, then mocks (or maybe just real?)
-                // User screenshot implies mixed or just real. Code used mixed.
                 setDatasets([...datasetsWithCounts, ...initialDatasets]);
             }
         } catch (error) {
             console.error("Failed to fetch datasets", error);
-            // Optionally toast error?
         }
     };
 
@@ -152,8 +148,6 @@ const MyDatasetsPage = () => {
 
     const handleUploadSubmit = async () => {
         try {
-            const { datasetService } = await import("@/services/datasets");
-
             // If file is present, ideally we'd use a different endpoint or read it.
             // For now, let's create the dataset metadata entry
             const newDataset: any = {
@@ -196,7 +190,6 @@ const MyDatasetsPage = () => {
                 const isReal = typeof datasetToDelete === 'string' && datasetToDelete.length > 10;
 
                 if (isReal) {
-                    const { datasetService } = await import("@/services/datasets");
                     await datasetService.delete(datasetToDelete as string);
                     toast({
                         title: "Dataset Deleted",
@@ -244,7 +237,6 @@ const MyDatasetsPage = () => {
                 const isReal = typeof editDataset.id === 'string' && editDataset.id.length > 10;
 
                 if (isReal) {
-                    const { datasetService } = await import("@/services/datasets");
                     await datasetService.update(editDataset.id, {
                         name: editDataset.name,
                         description: (editDataset as any).desc, // Ensure mapping if needed
@@ -477,7 +469,7 @@ const MyDatasetsPage = () => {
 
                                 if (isReal) {
                                     // Update via API
-                                    await (await import("@/services/datasets")).datasetService.update(selectedDataset.id, {
+                                    await datasetService.update(selectedDataset.id, {
                                         human_reviewed: true,
                                     });
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -10,11 +10,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/Dialog';
-import { Bot, Plus, Settings, Trash2, AlertCircle, Zap } from 'lucide-react';
+import { Bot, Plus, Trash2, AlertCircle, Zap, MoreVertical, Edit2, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditAgentDialog } from '@/components/configurations/EditAgentDialog';
-import type { Agent } from '@/types/AgentTypes';
+import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
+import type { Agent, TestUser } from '@/types/AgentTypes';
 import { agentService } from '@/services/agents';
+import { testUserService } from '@/services/testUsers';
 
 export default function AgentConfigPage() {
     const [agents, setAgents] = useState<Agent[]>([]);
@@ -25,6 +27,22 @@ export default function AgentConfigPage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+
+    const [isTestUserDialogOpen, setIsTestUserDialogOpen] = useState(false);
+    const [agentForTestUser, setAgentForTestUser] = useState<Agent | null>(null);
+
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const fetchAgents = async () => {
         try {
@@ -56,22 +74,60 @@ export default function AgentConfigPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleSaveAgent = async (updatedAgent: Agent) => {
+    const handleSaveAgent = async (updatedAgent: Agent): Promise<Agent | void> => {
         try {
-            if (selectedAgent) {
+            let savedAgent: Agent;
+            if (selectedAgent && selectedAgent.id === updatedAgent.id && updatedAgent.id.length > 10) {
                 // Update
-                const savedAgent = await agentService.update(updatedAgent.id, updatedAgent);
+                savedAgent = await agentService.update(updatedAgent.id, updatedAgent);
                 setAgents((prev) => prev.map((a) => (a.id === savedAgent.id ? savedAgent : a)));
             } else {
                 // Create
-                const savedAgent = await agentService.create(updatedAgent);
+                savedAgent = await agentService.create(updatedAgent);
                 setAgents((prev) => [...prev, savedAgent]);
+                setSelectedAgent(savedAgent); // So future saves in step 2 will update correctly
             }
-            setIsEditDialogOpen(false);
-        } catch (err) {
+
+            console.log("Saved agent successfully:", savedAgent);
+            return savedAgent;
+        } catch (err: any) {
             console.error('Failed to save agent:', err);
-            // Ideally show a toast here
-            alert('Failed to save agent');
+
+            // Extract descriptive errors generated from FastAPI (usually under .response.data.detail)
+            let errorMessage = 'Unknown error occurred.';
+            if (err?.response?.data?.detail) {
+                if (typeof err.response.data.detail === 'string') {
+                    errorMessage = err.response.data.detail;
+                } else {
+                    errorMessage = JSON.stringify(err.response.data.detail, null, 2);
+                }
+            } else if (err?.message) {
+                errorMessage = err.message;
+            }
+
+            alert(`Failed to save agent:\n\n${errorMessage}`);
+        }
+    };
+
+
+    const handleSaveTestUserFromMenu = async (user: TestUser) => {
+        if (!agentForTestUser) return;
+        try {
+            // 1. Call API to create test user
+            await testUserService.create(agentForTestUser.id, user);
+
+            // 2. Update agent's frontend details so it shows up in edit menu
+            const updatedAgent = {
+                ...agentForTestUser,
+                testUsers: [...(agentForTestUser.testUsers || []), user]
+            };
+            const savedAgent = await agentService.update(agentForTestUser.id, updatedAgent);
+            setAgents((prev) => prev.map((a) => (a.id === savedAgent.id ? savedAgent : a)));
+
+            setIsTestUserDialogOpen(false);
+        } catch (err) {
+            console.error('Failed to save test user:', err);
+            alert('Failed to save test user');
         }
     };
 
@@ -175,23 +231,68 @@ export default function AgentConfigPage() {
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-1 relative" ref={openMenuId === agent.id ? menuRef : null}>
                                             <motion.button
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                onClick={() => handleEditAgent(agent)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(openMenuId === agent.id ? null : agent.id);
+                                                }}
                                                 className="p-1.5 rounded-md hover:bg-muted transition-colors"
                                             >
-                                                <Settings className="h-4 w-4 text-muted-foreground" />
+                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
                                             </motion.button>
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={(e) => handleDeleteClick(agent, e)}
-                                                className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </motion.button>
+
+                                            <AnimatePresence>
+                                                {openMenuId === agent.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="absolute right-0 top-8 z-50 min-w-[160px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none"
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditAgent(agent);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setAgentForTestUser(agent);
+                                                                    setIsTestUserDialogOpen(true);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <UserPlus className="mr-2 h-4 w-4" />
+                                                                <span>Add test user</span>
+                                                            </button>
+                                                            <div className="h-px bg-border my-1 mx-1" />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteClick(agent, e);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-destructive/10 text-destructive focus:bg-destructive focus:text-destructive-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Delete</span>
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </CardHeader>
                                     <CardContent onClick={() => handleEditAgent(agent)}>
@@ -294,6 +395,14 @@ export default function AgentConfigPage() {
                 onOpenChange={setIsEditDialogOpen}
                 agent={selectedAgent}
                 onSave={handleSaveAgent}
+            />
+
+            {/* Add Test User Dialog */}
+            <AddTestUserDialog
+                open={isTestUserDialogOpen}
+                onOpenChange={setIsTestUserDialogOpen}
+                agentName={agentForTestUser?.name}
+                onSave={handleSaveTestUserFromMenu}
             />
 
             {/* Delete Confirmation Dialog */}

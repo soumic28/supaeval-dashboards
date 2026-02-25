@@ -2,7 +2,9 @@ import axios from "axios";
 
 // Create a global Axios instance
 export const apiClient = axios.create({
-  baseURL: "https://supaeval-backend.azurewebsites.net/v1",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://supaeval-backend.azurewebsites.net/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,14 +14,6 @@ export const apiClient = axios.create({
 // Request Interceptor: Auto-attach Authorization token
 apiClient.interceptors.request.use(
   (config) => {
-    // Logging Request
-    console.group(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
-    );
-    console.log("Headers:", config.headers);
-    console.log("Data:", config.data);
-    console.groupEnd();
-
     // TODO: Retrieve token from your auth store (e.g., localStorage, Zustand, Context)
     const token = localStorage.getItem("auth_token");
     if (token) {
@@ -36,11 +30,6 @@ apiClient.interceptors.request.use(
 // Response Interceptor: Global Error Handling
 apiClient.interceptors.response.use(
   (response) => {
-    // Logging Response
-    console.group(`✅ API Response: ${response.status} ${response.config.url}`);
-    console.log("Data:", response.data);
-    console.groupEnd();
-
     return response.data; // Return only data for easier consumption
   },
   (error) => {

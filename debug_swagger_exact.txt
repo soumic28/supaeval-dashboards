@@ -1,0 +1,3 @@
+Status: 500
+Text: Internal Server Error
+Headers sent: {'accept': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzE5MTg0MDIsInN1YiI6IjMwODQwOTAyLWEzYzUtNDc1NS1iZmE5LTA5NTU5ZGZkOWYxMyIsInRlbmFudF9pZCI6bnVsbCwid29ya3NwYWNlX2lkIjpudWxsfQ.5uXHHcYFEMuY5Ku6D2vc48UndiugkUCuPa0f4rffWWs', 'Content-Type': 'application/json'}

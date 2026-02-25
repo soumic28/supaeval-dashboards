@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -8,9 +8,11 @@ import { Select } from '@/components/ui/Select';
 import { AlertCircle, Loader2, Check, Terminal, Cpu, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ModeToggle } from '@/components/ModeToggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
     const navigate = useNavigate();
+    const { signup } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -49,18 +51,32 @@ export default function SignupPage() {
         }
     }, [charIndex, currentSnippet]);
 
-    const onSubmit = async (_data: any) => {
+    const onSubmit = async (data: any) => {
         setError(null);
         try {
-            // Mock signup delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            // In a real app, call authService.signup(data) here
-            setSuccess(true);
-            setTimeout(() => {
-                navigate("/login");
-            }, 2000);
+            if (signup) {
+                const fullName = `${data.firstName} ${data.lastName}`.trim();
+                await signup({ email: data.email, password: data.password, name: fullName });
+
+                setSuccess(true);
+                setTimeout(() => {
+                    navigate("/onboarding/tenant");
+                }, 2000);
+            }
         } catch (err: any) {
-            setError(err.message || "Failed to create account. Please try again.");
+            console.error(err);
+            if (err?.original?.response?.data?.detail) {
+                const details = err.original.response.data.detail;
+                if (Array.isArray(details) && details.length > 0) {
+                    setError(details[0].msg || "Validation error");
+                } else {
+                    setError("Failed to create account. Please check your inputs.");
+                }
+            } else if (err?.message) {
+                setError(err.message);
+            } else {
+                setError("Failed to create account. Please try again.");
+            }
         }
     };
 

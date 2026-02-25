@@ -6,23 +6,45 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { signup } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleSignup = (e: React.FormEvent) => {
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
         setIsLoading(true);
-        // Simulate network delay for effect
-        setTimeout(() => {
-            // For mock/demo purposes, signup just logs you in with the provided credentials
-            login({ email, password });
+        console.log("Attempting signup with:", { email, name, hasSignupFn: !!signup });
+        try {
+            if (signup) {
+                await signup({ email, password, name });
+                console.log("Signup complete, navigating to /");
+                navigate('/');
+            } else {
+                console.error("Signup function is undefined in useAuth! (Vite HMR issue)");
+                setError("Signup service unavailable. Please refresh the page (F5).");
+            }
+        } catch (err: any) {
+            console.error("Signup error caught:", err);
+            if (err?.original?.response?.data?.detail) {
+                const details = err.original.response.data.detail;
+                if (Array.isArray(details) && details.length > 0) {
+                    setError(details[0].msg || "Validation error");
+                } else {
+                    setError("Failed to create account. Please check your inputs.");
+                }
+            } else if (err?.message) {
+                setError(err.message);
+            } else {
+                setError("Failed to create account. Please try again.");
+            }
+        } finally {
             setIsLoading(false);
-            navigate('/');
-        }, 1500);
+        }
     };
 
     return (
@@ -52,6 +74,11 @@ export default function SignupPage() {
                         </div>
 
                         <form onSubmit={handleSignup} className="space-y-6">
+                            {error && (
+                                <div className="p-3 text-sm bg-red-500/10 border border-red-500/50 text-red-500 rounded-xl text-center">
+                                    {error}
+                                </div>
+                            )}
                             <div className="space-y-4">
                                 <div className="group relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

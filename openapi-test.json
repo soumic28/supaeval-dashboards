@@ -1,0 +1,66 @@
+{
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Description"
+    },
+    "evaluation_scope": {
+      "type": "string",
+      "title": "Evaluation Scope"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Is Active",
+      "default": true
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Id"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Workspace Id"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated At"
+    },
+    "metrics": {
+      "items": {
+        "$ref": "#/components/schemas/MetricResponse"
+      },
+      "type": "array",
+      "title": "Metrics",
+      "default": []
+    }
+  },
+  "type": "object",
+  "required": [
+    "name",
+    "evaluation_scope",
+    "id",
+    "workspace_id",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "LayerResponse"
+}

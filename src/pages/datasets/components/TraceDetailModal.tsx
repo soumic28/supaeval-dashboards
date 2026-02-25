@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { X, ChevronRight, ChevronDown, Hammer, Search, Activity, Copy, Play, Check, Brain, Database, MessageSquare, Cpu, AlertTriangle, FileText, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { X, ChevronRight, ChevronDown, Hammer, Search, Activity, Copy, Check, Brain, Database, MessageSquare, Cpu, AlertTriangle, FileText, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { traceService } from "@/services/traces";
@@ -114,7 +114,7 @@ const buildTraceTree = (spans: Span[]): TraceSpan | null => {
 
     return {
         id: 'root-synthetic',
-        name: 'Full Trace Session',
+        name: 'Full Prompt Session',
         type: 'system',
         startTime: minStart,
         duration: maxEnd - minStart,
@@ -131,7 +131,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_unhealthy' || (promptId && promptId.includes('fail'))) {
         return {
             id: `root-${promptId}`,
-            name: 'RAG Evaluation Run (Hallucination)',
+            name: 'Evaluation Run (Failed)',
             type: 'system',
             startTime: 0,
             duration: 2.1,
@@ -214,7 +214,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
         return {
             id: `root-${promptId}`,
             // ... (keep existing Scenario 2 content if needed, but for now I will just target the gap between Scenario 2 and Default to insert Scenario 3 & 4)
-            name: 'Agent Tool Execution (Failed)',
+            name: 'Prompt Execution (Failed)',
             type: 'system',
             startTime: 0,
             duration: 1.5,
@@ -278,7 +278,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_planning' || (promptId && promptId.includes('plan'))) {
         return {
             id: `root-${promptId}`,
-            name: 'Complex Reasoning Agent (Loop)',
+            name: 'Complex Prompt Chain (Loop)',
             type: 'system',
             startTime: 0,
             duration: 5.5,
@@ -298,7 +298,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 "layer_1_analyze": { complexity: "high", requires_tool: true }
             },
             inputs: { query: 'Calculate the square root of the sum of the first 100 primes.' },
-            outputs: { error: "MaxRetryExceeded: Agent stuck in planning loop" },
+            outputs: { error: "MaxRetryExceeded: Stuck in planning loop" },
             children: [
                 {
                     id: 'layer_1_analyze',
@@ -332,7 +332,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     if (promptId === 'trace_security' || (promptId && promptId.includes('sec'))) {
         return {
             id: `root-${promptId}`,
-            name: 'Public Chatbot (Blocked)',
+            name: 'Evaluation Run (Blocked)',
             type: 'system',
             startTime: 0,
             duration: 0.1,
@@ -373,14 +373,14 @@ const generateMockTrace = (promptId: string): TraceSpan => {
     // Default Scenario: Complex Agent Run (Success & Reviewed)
     return {
         id: `root-${promptId}`,
-        name: 'Evaluation Run (Reviewed)',
+        name: 'Prompt Execution (Reviewed)',
         type: 'system',
         startTime: 0,
         duration: 4.25,
         status: 'success',
         isReviewed: true,
         isUnhealthy: false,
-        taskSequence: ['Intent Recognition', 'Plan Generation', 'Information Retrieval', 'Response Synthesis'],
+        taskSequence: ['System Instructions', 'Context Assembly', 'Variable Injection', 'LLM Call'],
         successCriteria: [
             'Identify user intent correctly as "BookFlight"',
             'Retrieve at least 2 relevant policy documents',
@@ -404,7 +404,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
         children: [
             {
                 id: 'layer_1_input',
-                name: '1. Input & Intent Layer',
+                name: '1. System Prompt & Guardrails',
                 type: 'layer',
                 layerType: 'input',
                 startTime: 0.1,
@@ -419,7 +419,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l1_step_1',
-                        name: 'Intent Classifier',
+                        name: 'Load Base Instructions',
                         type: 'llm',
                         startTime: 0.1,
                         duration: 0.1,
@@ -429,7 +429,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                     },
                     {
                         id: 'l1_step_2',
-                        name: 'Guardrails Check',
+                        name: 'Inject Guardrails',
                         type: 'step',
                         startTime: 0.2,
                         duration: 0.05,
@@ -441,7 +441,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_2_planning',
-                name: '2. Planning & Reasoning Layer',
+                name: '2. Context & Few-shots',
                 type: 'layer',
                 layerType: 'planning',
                 startTime: 0.3,
@@ -455,7 +455,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l2_step_1',
-                        name: 'Planner Agent',
+                        name: 'Retrieve Examples',
                         type: 'llm',
                         startTime: 0.3,
                         duration: 0.4,
@@ -467,7 +467,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_3_retrieval',
-                name: '3. Retrieval & Context Layer',
+                name: '3. Variable Interpolation',
                 type: 'layer',
                 layerType: 'retrieval',
                 startTime: 0.8,
@@ -481,7 +481,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l3_step_1',
-                        name: 'Vector Search',
+                        name: 'Inject User Query',
                         type: 'retriever',
                         startTime: 0.8,
                         duration: 0.2,
@@ -493,7 +493,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_4_memory',
-                name: '4. Memory Layer',
+                name: '4. Memory Injection',
                 type: 'layer',
                 layerType: 'memory',
                 startTime: 1.15,
@@ -508,7 +508,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_5_tool',
-                name: '5. Tool & Action Layer',
+                name: '5. Tool Binding',
                 type: 'layer',
                 layerType: 'tool',
                 startTime: 1.3,
@@ -519,7 +519,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l5_step_1',
-                        name: 'FlightAPI.search',
+                        name: 'Bind Function Tools',
                         type: 'tool',
                         startTime: 1.3,
                         duration: 1.4,
@@ -531,7 +531,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_6_generation',
-                name: '6. Generation Layer',
+                name: '6. LLM Execution',
                 type: 'layer',
                 layerType: 'generation',
                 startTime: 2.9,
@@ -542,7 +542,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
                 children: [
                     {
                         id: 'l6_step_1',
-                        name: 'Response Synthesizer',
+                        name: 'Model API Call',
                         type: 'llm',
                         startTime: 2.9,
                         duration: 0.8,
@@ -554,7 +554,7 @@ const generateMockTrace = (promptId: string): TraceSpan => {
             },
             {
                 id: 'layer_7_system',
-                name: '7. System Layer',
+                name: '7. Output Validation',
                 type: 'layer',
                 layerType: 'system',
                 startTime: 3.8,
@@ -845,7 +845,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                 <div className="bg-background w-full h-full max-w-[1600px] max-h-[90vh] border rounded-xl shadow-2xl flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <Activity className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Loading trace details...</p>
+                        <p className="text-muted-foreground">Loading prompt listing tree...</p>
                     </div>
                 </div>
             </div>
@@ -863,7 +863,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                             <Activity className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold leading-none">Trace Details</h2>
+                            <h2 className="text-lg font-bold leading-none">Prompt Listing Tree</h2>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded-sm">ID: {promptId}</span>
                                 <Badge variant="outline" className="text-[10px] h-5 border-green-200 bg-green-50 text-green-700 gap-1 pl-1 pr-2">
@@ -944,8 +944,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                             {selectedSpan.duration.toFixed(3)}s
                                         </Badge>
                                         <Button size="sm" variant="outline" className="gap-2 h-8">
-                                            <Activity className="w-3.5 h-3.5" />
-                                            Assessments
+                                            Save
                                         </Button>
                                     </div>
                                 </div>
@@ -978,13 +977,6 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                                         ) : (
                                                             <div className="text-xs text-muted-foreground italic px-2">No inputs available</div>
                                                         )}
-
-                                                        <div className="flex justify-end pt-2">
-                                                            <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200">
-                                                                <Play className="w-3.5 h-3.5 fill-current" />
-                                                                Run
-                                                            </Button>
-                                                        </div>
                                                     </div>
                                                 </CollapsibleSection>
 
@@ -1137,7 +1129,7 @@ export function TraceDetailModal({ isOpen, onClose, promptId }: TraceDetailModal
                                 <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                                     <Activity className="w-8 h-8 opacity-50" />
                                 </div>
-                                <h3 className="text-lg font-medium text-foreground">Select a Trace Step</h3>
+                                <h3 className="text-lg font-medium text-foreground">Select a Step</h3>
                                 <p className="text-sm max-w-[250px] mt-2">Click on any step in the execution tree on the left to view details.</p>
                             </div>
                         )}

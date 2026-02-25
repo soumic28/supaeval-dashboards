@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/Button';
-import { Filter, Download, Columns as ColumnsIcon, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight, Check } from 'lucide-react';
+import { Input } from '@/components/ui/Input';
+import { Filter, Download, Columns as ColumnsIcon, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight, Check, Search, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/components/ui/use-toast';
 
 const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
     const base = {
@@ -77,12 +79,28 @@ const generateInitialTraces = () => Array.from({ length: 32 }).map((_, i) => {
     const id = `tr-${Math.random().toString(16).slice(2, 10)}`;
     const isAdvanced = i % 3 === 0;
     const names = ['Evaluation Query', 'Search Request', 'Chat Completion', 'Metrics Analysis', 'Router Span', 'Agent Step'];
+
+    // Generate dates over the last 30 days
+    const now = new Date();
+    // Use a mix of recent and older traces (hours to days)
+    const daysAgo = i < 8 ? (Math.random() / 24) : i < 15 ? (Math.random()) : (Math.random() * 30);
+    const date = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+
+    // Format "DD/MM/YYYY hh:mm:ss"
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+
     return {
         id: id + '...',
         name: names[i % names.length],
         request: '{"domain_name": "ai...", "agent_name": "supervisor..."}',
         response: 'null',
-        requestTime: `11/30/2025, 07:${30 + (i % 30)}:${10 + i}`,
+        timestamp: date.getTime(),
+        requestTime: `${mm}/${dd}/${yyyy}, ${hh}:${min}:${ss}`,
         state: i % 7 === 0 ? 'Error' : 'OK',
         details: generateMockDetails(id, isAdvanced)
     };
@@ -92,12 +110,16 @@ const TracesPage = () => {
     const [traces, setTraces] = useState(generateInitialTraces());
     const [selectedTrace, setSelectedTrace] = useState<typeof traces[0] | null>(null);
     const [activeTab, setActiveTab] = useState<'Overview' | 'Timeline' | 'Raw'>('Overview');
+    const { toast } = useToast();
 
     // Header Actions State
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showTimeRangeDropdown, setShowTimeRangeDropdown] = useState(false);
+    const [selectedTimeRange, setSelectedTimeRange] = useState('Custom');
 
     // Filter State
     const [statusFilter, setStatusFilter] = useState<'All' | 'OK' | 'Error'>('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     // Columns State
@@ -117,12 +139,59 @@ const TracesPage = () => {
     const itemsPerPage = 10;
 
     // Apply filters
-    const filteredTraces = traces.filter(t => statusFilter === 'All' || t.state === statusFilter);
-    const totalPages = Math.ceil(filteredTraces.length / itemsPerPage);
+    const filteredTraces = traces.filter(t => {
+        const matchesStatus = statusFilter === 'All' || t.state === statusFilter;
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch = searchQuery === '' ||
+            t.name.toLowerCase().includes(searchLower) ||
+            t.id.toLowerCase().includes(searchLower) ||
+            t.details.user_id.toLowerCase().includes(searchLower);
+
+        let matchesTime = true;
+        if (selectedTimeRange !== 'Custom') {
+            const now = new Date().getTime();
+            const traceTime = t.timestamp; // custom prop we added
+            if (selectedTimeRange === 'Last 1 hour') {
+                matchesTime = (now - traceTime) <= 60 * 60 * 1000;
+            } else if (selectedTimeRange === 'Last 24 hours') {
+                matchesTime = (now - traceTime) <= 24 * 60 * 60 * 1000;
+            } else if (selectedTimeRange === 'Last 7 days') {
+                matchesTime = (now - traceTime) <= 7 * 24 * 60 * 60 * 1000;
+            } else if (selectedTimeRange === 'Last 30 days') {
+                matchesTime = (now - traceTime) <= 30 * 24 * 60 * 60 * 1000;
+            }
+        }
+
+        return matchesStatus && matchesSearch && matchesTime;
+    })
+        .sort((a, b) => b.timestamp - a.timestamp); // sort by newest first
+
+    const totalPages = Math.max(1, Math.ceil(filteredTraces.length / itemsPerPage));
     const paginatedTraces = filteredTraces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     // Reset page to 1 if filter changes
-    useEffect(() => { setCurrentPage(1) }, [statusFilter]);
+    useEffect(() => { setCurrentPage(1) }, [statusFilter, searchQuery, selectedTimeRange]);
+
+    // Format Start/End display dates
+    const getDisplayDates = () => {
+        const now = new Date();
+        let start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Custom implies ~30 days limit
+        if (selectedTimeRange === 'Last 1 hour') start = new Date(now.getTime() - 60 * 60 * 1000);
+        else if (selectedTimeRange === 'Last 24 hours') start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        else if (selectedTimeRange === 'Last 7 days') start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        else if (selectedTimeRange === 'Last 30 days') start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        const fmt = (d: Date) => {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = d.getFullYear();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mn = String(d.getMinutes()).padStart(2, '0');
+            return `${dd}-${mm}-${yy} ${hh}:${mn}`;
+        };
+        return { start: fmt(start), end: fmt(now) };
+    };
+    const { start: displayStart, end: displayEnd } = getDisplayDates();
 
     // Handlers
     const handleRefresh = () => {
@@ -130,6 +199,10 @@ const TracesPage = () => {
         setTimeout(() => {
             setTraces([...generateInitialTraces()]); // shuffle data
             setIsRefreshing(false);
+            toast({
+                title: "Refreshed",
+                description: "Latest traces have been loaded successfully.",
+            });
         }, 800);
     };
 
@@ -147,6 +220,19 @@ const TracesPage = () => {
         a.download = `traces_export_${new Date().getTime()}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
+
+        toast({
+            title: "Export Successful",
+            description: "Your traces data has been downloaded as a CSV file.",
+        });
+    };
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: "Copied!",
+            description: "Trace log copied to clipboard.",
+        });
     };
 
     const toggleColumn = (key: keyof typeof visibleColumns) => {
@@ -240,12 +326,64 @@ const TracesPage = () => {
                 </div>
 
                 {/* Actions Bar */}
-                <div className="flex items-center justify-end border-b pb-4">
-                    <div className="hidden lg:flex text-sm text-muted-foreground items-center gap-2">
-                        <span>Time Range: Custom</span>
-                        <span className="h-4 w-px bg-border"></span>
-                        <span>Start: 20-11-2025 07:32</span>
-                        <span>End: 18-02-2026 18:47</span>
+                <div className="flex flex-col sm:flex-row items-center justify-between border-b pb-4 gap-4">
+                    <div className="relative w-full sm:max-w-md">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search traces by ID, Name, or User ID..."
+                            className="pl-8 bg-background"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto relative z-20">
+                        <div className="flex items-center rounded-md border border-input bg-card shadow-sm h-9 w-full sm:w-auto">
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "h-full whitespace-nowrap text-muted-foreground font-normal flex hover:bg-muted/50 border-0 focus-visible:ring-0 w-full sm:w-auto justify-between sm:justify-center",
+                                    showTimeRangeDropdown && "bg-muted text-foreground",
+                                    "xl:rounded-r-none"
+                                )}
+                                onClick={() => setShowTimeRangeDropdown(!showTimeRangeDropdown)}
+                            >
+                                <div className="flex items-center">
+                                    <Calendar className="w-4 h-4 mr-2 text-foreground" />
+                                    <span className="text-foreground font-medium mr-1">Time Range:</span> {selectedTimeRange}
+                                </div>
+                                <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
+                            </Button>
+
+                            <div className="hidden xl:flex text-xs text-muted-foreground items-center gap-2 bg-muted/20 px-3 h-full border-l border-input">
+                                <span className="whitespace-nowrap">Start: {displayStart}</span>
+                                <span className="h-3 w-px bg-border"></span>
+                                <span className="whitespace-nowrap">End: {displayEnd}</span>
+                            </div>
+                        </div>
+                        {/* Time Range Dropdown - Positioned relative to parent now */}
+                        {showTimeRangeDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setShowTimeRangeDropdown(false)}></div>
+                                <div className="absolute top-10 left-0 w-full sm:w-48 bg-card border rounded-md shadow-lg z-40 p-1">
+                                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Select Range</div>
+                                    {['Last 1 hour', 'Last 24 hours', 'Last 7 days', 'Last 30 days', 'Custom'].map(opt => (
+                                        <button
+                                            key={opt}
+                                            className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted rounded-sm flex items-center justify-between"
+                                            onClick={() => {
+                                                setSelectedTimeRange(opt);
+                                                setShowTimeRangeDropdown(false);
+                                                toast({ description: `Time range set to ${opt}` });
+                                            }}
+                                        >
+                                            {opt}
+                                            {selectedTimeRange === opt && <Check className="w-4 h-4 text-primary" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -301,8 +439,23 @@ const TracesPage = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
-                                            No traces found for the active filters.
+                                        <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="px-6 py-12 text-center text-muted-foreground">
+                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                <Search className="w-8 h-8 text-muted-foreground/50 mb-2" />
+                                                <p>No traces found for the active filters.</p>
+                                                {(statusFilter !== 'All' || searchQuery !== '') && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            setStatusFilter('All');
+                                                            setSearchQuery('');
+                                                        }}
+                                                        className="h-auto p-0"
+                                                    >
+                                                        Clear all filters
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -394,17 +547,17 @@ const TracesPage = () => {
                         </div>
 
                         {/* Tabs */}
-                        <div className="px-4 border-b bg-card">
+                        <div className="px-6 border-b bg-card">
                             <div className="flex items-center gap-6">
                                 {(['Overview', 'Timeline', 'Raw'] as const).map(tab => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         className={cn(
-                                            "py-3 text-sm font-medium border-b-2 transition-colors relative top-[1px]",
+                                            "py-3 text-sm font-medium border-b-2 transition-all relative top-[1px]",
                                             activeTab === tab
                                                 ? "border-primary text-foreground"
-                                                : "border-transparent text-muted-foreground hover:text-foreground"
+                                                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
                                         )}
                                     >
                                         {tab}
@@ -517,8 +670,8 @@ const TracesPage = () => {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-semibold">Raw Trace Log</h3>
-                                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => navigator.clipboard.writeText(JSON.stringify(selectedTrace.details, null, 2))}>
-                                            <Copy className="w-3 h-3 mr-1" /> Copy All
+                                        <Button variant="outline" size="sm" className="h-7 text-xs bg-muted/50 hover:bg-muted" onClick={() => handleCopy(JSON.stringify(selectedTrace.details, null, 2))}>
+                                            <Copy className="w-3 h-3 mr-1.5" /> Copy All
                                         </Button>
                                     </div>
                                     <div className="bg-card border rounded-md p-4 overflow-x-auto text-xs font-mono">

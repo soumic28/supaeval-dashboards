@@ -1,0 +1,10 @@
+Testing without auth...
+No auth status: 401
+No auth response: {"detail":"Not authenticated"}
+
+Testing with dummy auth...
+Dummy auth status: 401
+Dummy auth response: {"detail":"Invalid token"}
+
+Testing with double slash /v1//workspaces...
+Double slash no auth status: 401
