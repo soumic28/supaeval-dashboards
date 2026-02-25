@@ -51,6 +51,7 @@ export interface Agent {
   parallelRuns?: number;
   testUsers?: TestUser[];
   memories?: AgentMemory[];
+  metrics?: string[]; // Array of mapped Metric IDs
 }
 
 export interface AgentTemplate {
@@ -90,6 +91,7 @@ export interface AgentCreateRequest {
           parallel_runs?: number;
           test_users?: TestUser[];
           memories?: AgentMemory[];
+          metrics?: string[];
         };
     last_active?: string;
     status?: AgentStatus;
@@ -110,6 +112,7 @@ export interface AgentUpdateRequest {
           parallel_runs?: number;
           test_users?: TestUser[];
           memories?: AgentMemory[];
+          metrics?: string[];
         };
     last_active?: string;
     status?: AgentStatus;
@@ -134,6 +137,7 @@ export interface AgentResponse {
           parallel_runs?: number;
           test_users?: TestUser[];
           memories?: AgentMemory[];
+          metrics?: string[];
         };
     last_active?: string;
     status?: AgentStatus;

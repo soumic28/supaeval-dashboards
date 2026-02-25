@@ -40,6 +40,7 @@ const mapDtoToAgent = (dto: AgentResponse): Agent => {
     parallelRuns: frontendDetails.parallel_runs,
     testUsers: frontendDetails.test_users || [],
     memories: frontendDetails.memories || [],
+    metrics: frontendDetails.metrics || [],
     configuration: dto.configuration, // Keep raw config just in case
   };
 };
@@ -68,6 +69,7 @@ const mapAgentToCreateRequest = (agent: Partial<Agent>): AgentCreateRequest => {
         parallel_runs: agent.parallelRuns,
         test_users: agent.testUsers,
         memories: agent.memories,
+        metrics: agent.metrics,
       }),
       last_active: "Just now",
       status: "Active",
@@ -95,6 +97,7 @@ const mapAgentToUpdateRequest = (agent: Partial<Agent>): AgentUpdateRequest => {
         parallel_runs: agent.parallelRuns,
         test_users: agent.testUsers,
         memories: agent.memories,
+        metrics: agent.metrics,
       }),
       last_active: agent.lastActive,
       status: agent.status,
