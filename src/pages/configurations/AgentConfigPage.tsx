@@ -14,8 +14,9 @@ import { Bot, Plus, Trash2, AlertCircle, Zap, MoreVertical, Edit2, UserPlus } fr
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditAgentDialog } from '@/components/configurations/EditAgentDialog';
 import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
-import type { Agent } from '@/types/AgentTypes';
+import type { Agent, TestUser } from '@/types/AgentTypes';
 import { agentService } from '@/services/agents';
+import { testUserService } from '@/services/testUsers';
 
 export default function AgentConfigPage() {
     const [agents, setAgents] = useState<Agent[]>([]);
@@ -75,20 +76,96 @@ export default function AgentConfigPage() {
 
     const handleSaveAgent = async (updatedAgent: Agent) => {
         try {
+            let savedAgent: Agent;
             if (selectedAgent) {
                 // Update
-                const savedAgent = await agentService.update(updatedAgent.id, updatedAgent);
+                savedAgent = await agentService.update(updatedAgent.id, updatedAgent);
                 setAgents((prev) => prev.map((a) => (a.id === savedAgent.id ? savedAgent : a)));
             } else {
                 // Create
-                const savedAgent = await agentService.create(updatedAgent);
+                savedAgent = await agentService.create(updatedAgent);
                 setAgents((prev) => [...prev, savedAgent]);
             }
+
+            console.log("Saving agent, test users attached:", updatedAgent.testUsers);
+
+            // Sync test users: find newly added test users
+            if (updatedAgent.testUsers && updatedAgent.testUsers.length > 0) {
+                // To debug, let's just create all of them for now
+                const newTestUsers = updatedAgent.testUsers;
+                console.log("Filtered test users to create:", newTestUsers);
+
+                if (newTestUsers.length > 0) {
+                    try {
+                        await Promise.all(
+                            newTestUsers.map(u => {
+                                console.log("Calling testUserService.create for:", u.name, "on agent:", savedAgent.id);
+                                return testUserService.create(savedAgent.id, u)
+                                    .then(res => console.log("Success creating test user:", res))
+                                    .catch(err => {
+                                        console.error("Failed to create test user via API", u.name, err);
+                                        let errorMessage = 'Unknown error occurred.';
+                                        if (err?.response?.data?.detail) {
+                                            if (typeof err.response.data.detail === 'string') {
+                                                errorMessage = err.response.data.detail;
+                                            } else {
+                                                errorMessage = JSON.stringify(err.response.data.detail, null, 2);
+                                            }
+                                        } else if (err?.message) {
+                                            errorMessage = err.message;
+                                        }
+                                        alert(`Failed to save test user "${u.name}":\n\n${errorMessage}`);
+                                    });
+                            })
+                        );
+                    } catch (err) {
+                        console.error("Unexpected synchronous error during Test User Promise.all", err);
+                    }
+                } else {
+                    console.log("No new test users found to create.");
+                }
+            } else {
+                console.log("No test users on this agent.");
+            }
+
             setIsEditDialogOpen(false);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to save agent:', err);
-            // Ideally show a toast here
-            alert('Failed to save agent');
+
+            // Extract descriptive errors generated from FastAPI (usually under .response.data.detail)
+            let errorMessage = 'Unknown error occurred.';
+            if (err?.response?.data?.detail) {
+                if (typeof err.response.data.detail === 'string') {
+                    errorMessage = err.response.data.detail;
+                } else {
+                    errorMessage = JSON.stringify(err.response.data.detail, null, 2);
+                }
+            } else if (err?.message) {
+                errorMessage = err.message;
+            }
+
+            alert(`Failed to save agent:\n\n${errorMessage}`);
+        }
+    };
+
+    const handleSaveTestUserFromMenu = async (user: TestUser) => {
+        if (!agentForTestUser) return;
+        try {
+            // 1. Call API to create test user
+            await testUserService.create(agentForTestUser.id, user);
+
+            // 2. Update agent's frontend details so it shows up in edit menu
+            const updatedAgent = {
+                ...agentForTestUser,
+                testUsers: [...(agentForTestUser.testUsers || []), user]
+            };
+            const savedAgent = await agentService.update(agentForTestUser.id, updatedAgent);
+            setAgents((prev) => prev.map((a) => (a.id === savedAgent.id ? savedAgent : a)));
+
+            setIsTestUserDialogOpen(false);
+        } catch (err) {
+            console.error('Failed to save test user:', err);
+            alert('Failed to save test user');
         }
     };
 
@@ -363,6 +440,7 @@ export default function AgentConfigPage() {
                 open={isTestUserDialogOpen}
                 onOpenChange={setIsTestUserDialogOpen}
                 agentName={agentForTestUser?.name}
+                onSave={handleSaveTestUserFromMenu}
             />
 
             {/* Delete Confirmation Dialog */}

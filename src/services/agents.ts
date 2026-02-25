@@ -12,7 +12,17 @@ import type {
 const mapDtoToAgent = (dto: AgentResponse): Agent => {
   // Try to get data from metadata.frontend_details first (rich state),
   // fallback to configuration (basic state)
-  const frontendDetails = dto.metadata?.frontend_details || {};
+  let frontendDetails: any = {};
+  if (dto.metadata?.frontend_details) {
+    try {
+      frontendDetails =
+        typeof dto.metadata.frontend_details === "string"
+          ? JSON.parse(dto.metadata.frontend_details)
+          : dto.metadata.frontend_details;
+    } catch (e) {
+      console.error("Failed to parse frontend_details", e);
+    }
+  }
 
   return {
     id: dto.id,
@@ -51,14 +61,14 @@ const mapAgentToCreateRequest = (agent: Partial<Agent>): AgentCreateRequest => {
       tools_enabled: true,
     },
     metadata: {
-      // Store the REAL state here so we get it back
-      frontend_details: {
+      // Store the REAL state here so we get it back, stringified to prevent 500 crashes
+      frontend_details: JSON.stringify({
         endpoints: agent.endpoints,
         auth: agent.auth,
         parallel_runs: agent.parallelRuns,
         test_users: agent.testUsers,
         memories: agent.memories,
-      },
+      }),
       last_active: "Just now",
       status: "Active",
     },
@@ -79,13 +89,13 @@ const mapAgentToUpdateRequest = (agent: Partial<Agent>): AgentUpdateRequest => {
       tools_enabled: true,
     },
     metadata: {
-      frontend_details: {
+      frontend_details: JSON.stringify({
         endpoints: agent.endpoints,
         auth: agent.auth,
         parallel_runs: agent.parallelRuns,
         test_users: agent.testUsers,
         memories: agent.memories,
-      },
+      }),
       last_active: agent.lastActive,
       status: agent.status,
     },

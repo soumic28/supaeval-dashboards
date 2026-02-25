@@ -246,18 +246,18 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave }: Add
                     {step === 1 ? (
                         <div className="flex justify-between w-full">
                             <span /> {/* Spacer */}
-                            <Button onClick={handleNext} disabled={!username.trim()}>
+                            <Button type="button" onClick={handleNext} disabled={!username.trim() || !memory.trim() || !context.trim()}>
                                 Next
                                 <ChevronRight className="ml-2 h-4 w-4" />
                             </Button>
                         </div>
                     ) : (
                         <div className="flex justify-between w-full">
-                            <Button variant="outline" onClick={handleBack}>
+                            <Button type="button" variant="outline" onClick={handleBack}>
                                 <ChevronLeft className="mr-2 h-4 w-4" />
                                 Back
                             </Button>
-                            <Button onClick={handleSubmit}>
+                            <Button type="button" onClick={handleSubmit} disabled={!chatHistory.trim() || !longTermMem.trim()}>
                                 <Save className="mr-2 h-4 w-4" />
                                 Save Profile
                             </Button>

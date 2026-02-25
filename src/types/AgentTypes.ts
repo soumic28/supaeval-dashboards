@@ -81,14 +81,16 @@ export interface AgentCreateRequest {
   agent_type: string; // Maps to category
   configuration?: AgentBackendConfig;
   metadata?: {
-    // We store the full frontend state here to persist it safely
-    frontend_details?: {
-      endpoints?: AgentEndpoint[];
-      auth?: AgentAuth;
-      parallel_runs?: number;
-      test_users?: TestUser[];
-      memories?: AgentMemory[];
-    };
+    // We store the full frontend state here as a JSON string to persist it safely
+    frontend_details?:
+      | string
+      | {
+          endpoints?: AgentEndpoint[];
+          auth?: AgentAuth;
+          parallel_runs?: number;
+          test_users?: TestUser[];
+          memories?: AgentMemory[];
+        };
     last_active?: string;
     status?: AgentStatus;
     [key: string]: any;
@@ -100,13 +102,15 @@ export interface AgentUpdateRequest {
   description?: string;
   configuration?: AgentBackendConfig;
   metadata?: {
-    frontend_details?: {
-      endpoints?: AgentEndpoint[];
-      auth?: AgentAuth;
-      parallel_runs?: number;
-      test_users?: TestUser[];
-      memories?: AgentMemory[];
-    };
+    frontend_details?:
+      | string
+      | {
+          endpoints?: AgentEndpoint[];
+          auth?: AgentAuth;
+          parallel_runs?: number;
+          test_users?: TestUser[];
+          memories?: AgentMemory[];
+        };
     last_active?: string;
     status?: AgentStatus;
     [key: string]: any;
@@ -122,18 +126,46 @@ export interface AgentResponse {
   agent_type: string;
   configuration?: AgentBackendConfig;
   metadata?: {
-    frontend_details?: {
-      endpoints?: AgentEndpoint[];
-      auth?: AgentAuth;
-      parallel_runs?: number;
-      test_users?: TestUser[];
-      memories?: AgentMemory[];
-    };
+    frontend_details?:
+      | string
+      | {
+          endpoints?: AgentEndpoint[];
+          auth?: AgentAuth;
+          parallel_runs?: number;
+          test_users?: TestUser[];
+          memories?: AgentMemory[];
+        };
     last_active?: string;
     status?: AgentStatus;
     [key: string]: any;
   };
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TestUserCreateRequest {
+  user_id: string;
+  persona_type: string;
+  context?: Record<string, any>;
+  session_chat_history?: string[];
+  long_term_memory?: Record<string, any>;
+  attributes?: Record<string, any>;
+  is_active: boolean;
+  agent_id: string;
+}
+
+export interface TestUserResponse {
+  user_id: string;
+  persona_type: string;
+  context?: Record<string, any>;
+  session_chat_history?: string[];
+  long_term_memory?: Record<string, any>;
+  attributes?: Record<string, any>;
+  is_active: boolean;
+  agent_id: string;
+  id: string;
+  workspace_id: string;
   created_at: string;
   updated_at: string;
 }
