@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -20,9 +20,10 @@ interface AddTestUserDialogProps {
     onOpenChange: (open: boolean) => void;
     agentName?: string;
     onSave?: (user: TestUser) => void;
+    userToEdit?: TestUser | null;
 }
 
-export function AddTestUserDialog({ open, onOpenChange, agentName, onSave }: AddTestUserDialogProps) {
+export function AddTestUserDialog({ open, onOpenChange, agentName, onSave, userToEdit }: AddTestUserDialogProps) {
     const [step, setStep] = useState(1);
 
     // Step 1 State
@@ -38,12 +39,40 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave }: Add
     const [queryComplexity, setQueryComplexity] = useState('Simple');
     const [intentType, setIntentType] = useState('Informational');
 
+    // Populate initial data when opened
+    useEffect(() => {
+        if (open) {
+            setStep(1);
+            if (userToEdit) {
+                setUsername(userToEdit.name || '');
+                setMemory(userToEdit.memory || '');
+                setContext(userToEdit.context || '');
+                setChatHistory(userToEdit.attributes?.chatHistory || '');
+                setLongTermMem(userToEdit.attributes?.longTermMem || '');
+                setUserType(userToEdit.attributes?.userType || 'End Customer');
+                setRiskLevel(userToEdit.attributes?.riskLevel || 'Low');
+                setQueryComplexity(userToEdit.attributes?.queryComplexity || 'Simple');
+                setIntentType(userToEdit.attributes?.intentType || 'Informational');
+            } else {
+                setUsername('');
+                setMemory('');
+                setContext('');
+                setChatHistory('');
+                setLongTermMem('');
+                setUserType('End Customer');
+                setRiskLevel('Low');
+                setQueryComplexity('Simple');
+                setIntentType('Informational');
+            }
+        }
+    }, [open, userToEdit]);
+
     const handleNext = () => setStep(2);
     const handleBack = () => setStep(1);
 
     const handleSubmit = () => {
         const testUserData: TestUser = {
-            id: Date.now().toString(),
+            id: userToEdit ? userToEdit.id : Date.now().toString(),
             name: username,
             memory,
             context,
@@ -85,11 +114,11 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave }: Add
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <UserPlus className="h-5 w-5 text-primary" />
-                        Add Test User
+                        {userToEdit ? 'Edit Test User' : 'Add Test User'}
                         {agentName && <span className="text-muted-foreground font-normal text-sm ml-2">- {agentName}</span>}
                     </DialogTitle>
                     <DialogDescription>
-                        Create an Agent Evaluation Profile for testing.
+                        {userToEdit ? 'Edit the properties for this Agent Evaluation Profile.' : 'Create an Agent Evaluation Profile for testing.'}
                     </DialogDescription>
                 </DialogHeader>
 

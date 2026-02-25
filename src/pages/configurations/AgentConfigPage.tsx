@@ -74,10 +74,10 @@ export default function AgentConfigPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleSaveAgent = async (updatedAgent: Agent) => {
+    const handleSaveAgent = async (updatedAgent: Agent): Promise<Agent | void> => {
         try {
             let savedAgent: Agent;
-            if (selectedAgent) {
+            if (selectedAgent && selectedAgent.id === updatedAgent.id && updatedAgent.id.length > 10) {
                 // Update
                 savedAgent = await agentService.update(updatedAgent.id, updatedAgent);
                 setAgents((prev) => prev.map((a) => (a.id === savedAgent.id ? savedAgent : a)));
@@ -85,50 +85,11 @@ export default function AgentConfigPage() {
                 // Create
                 savedAgent = await agentService.create(updatedAgent);
                 setAgents((prev) => [...prev, savedAgent]);
+                setSelectedAgent(savedAgent); // So future saves in step 2 will update correctly
             }
 
-            console.log("Saving agent, test users attached:", updatedAgent.testUsers);
-
-            // Sync test users: find newly added test users
-            if (updatedAgent.testUsers && updatedAgent.testUsers.length > 0) {
-                // To debug, let's just create all of them for now
-                const newTestUsers = updatedAgent.testUsers;
-                console.log("Filtered test users to create:", newTestUsers);
-
-                if (newTestUsers.length > 0) {
-                    try {
-                        await Promise.all(
-                            newTestUsers.map(u => {
-                                console.log("Calling testUserService.create for:", u.name, "on agent:", savedAgent.id);
-                                return testUserService.create(savedAgent.id, u)
-                                    .then(res => console.log("Success creating test user:", res))
-                                    .catch(err => {
-                                        console.error("Failed to create test user via API", u.name, err);
-                                        let errorMessage = 'Unknown error occurred.';
-                                        if (err?.response?.data?.detail) {
-                                            if (typeof err.response.data.detail === 'string') {
-                                                errorMessage = err.response.data.detail;
-                                            } else {
-                                                errorMessage = JSON.stringify(err.response.data.detail, null, 2);
-                                            }
-                                        } else if (err?.message) {
-                                            errorMessage = err.message;
-                                        }
-                                        alert(`Failed to save test user "${u.name}":\n\n${errorMessage}`);
-                                    });
-                            })
-                        );
-                    } catch (err) {
-                        console.error("Unexpected synchronous error during Test User Promise.all", err);
-                    }
-                } else {
-                    console.log("No new test users found to create.");
-                }
-            } else {
-                console.log("No test users on this agent.");
-            }
-
-            setIsEditDialogOpen(false);
+            console.log("Saved agent successfully:", savedAgent);
+            return savedAgent;
         } catch (err: any) {
             console.error('Failed to save agent:', err);
 
@@ -147,6 +108,7 @@ export default function AgentConfigPage() {
             alert(`Failed to save agent:\n\n${errorMessage}`);
         }
     };
+
 
     const handleSaveTestUserFromMenu = async (user: TestUser) => {
         if (!agentForTestUser) return;

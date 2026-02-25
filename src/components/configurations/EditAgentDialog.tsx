@@ -15,13 +15,14 @@ import { Select } from '@/components/ui/Select';
 import { Save, Plus, Trash2, UserPlus, Brain, Database, Wrench, Users, Plug, Bot, ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
+import { testUserService } from '@/services/testUsers';
 import type { Agent, AgentCategory, AgentEndpoint, TestUser, AgentMemory } from '@/types/AgentTypes';
 
 interface EditAgentDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     agent: Agent | null;
-    onSave: (agent: Agent) => void;
+    onSave: (agent: Agent) => Promise<Agent | void>;
 }
 
 const AGENT_TEMPLATES = [
@@ -78,7 +79,10 @@ export function EditAgentDialog({
 }: EditAgentDialogProps) {
     const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
     const [isTestUserDialogOpen, setIsTestUserDialogOpen] = useState(false);
+    const [testUserToEdit, setTestUserToEdit] = useState<TestUser | null>(null);
     const [step, setStep] = useState(1);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (open) {
@@ -90,6 +94,14 @@ export function EditAgentDialog({
                 endpoints: agent.endpoints || [],
                 auth: agent.auth || { type: 'none' }
             });
+            // As per PM feedback, fetch fresh list of Test Users for the GET list request behavior
+            if (open) {
+                testUserService.listByAgentId(agent.id)
+                    .then(users => {
+                        setEditedAgent(prev => prev ? { ...prev, testUsers: users } : prev);
+                    })
+                    .catch(err => console.error("Failed to fetch test users:", err));
+            }
         } else {
             // Create new agent
             setEditedAgent({
@@ -107,25 +119,39 @@ export function EditAgentDialog({
         }
     }, [agent, open]);
 
-    const handleSave = () => {
-        console.log("handleSave triggered in EditAgentDialog");
-        if (!editedAgent) {
-            console.error("No editedAgent found, returning early.");
-            return;
+    const handleNextStep = async () => {
+        if (!editedAgent) return;
+        setIsSaving(true);
+        try {
+            const updatedAgent = {
+                ...editedAgent,
+                updatedAt: new Date().toISOString(),
+            };
+            const savedAgent = await onSave(updatedAgent);
+            if (savedAgent) {
+                setEditedAgent(savedAgent);
+                setStep(2);
+            }
+        } finally {
+            setIsSaving(false);
         }
-        if (!editedAgent.name.trim()) {
-            console.error("Agent name is empty, returning early.");
-            return;
+    };
+
+    const handleFinalSave = async () => {
+        if (!editedAgent) return;
+        setIsSaving(true);
+        try {
+            const updatedAgent = {
+                ...editedAgent,
+                updatedAt: new Date().toISOString(),
+            };
+            const savedAgent = await onSave(updatedAgent);
+            if (savedAgent) {
+                onOpenChange(false);
+            }
+        } finally {
+            setIsSaving(false);
         }
-
-        const updatedAgent = {
-            ...editedAgent,
-            updatedAt: new Date().toISOString(),
-        };
-
-        console.log("Calling onSave with payload:", updatedAgent);
-        onSave(updatedAgent);
-        onOpenChange(false);
     };
 
     const applyTemplate = (templateName: string) => {
@@ -173,20 +199,73 @@ export function EditAgentDialog({
     };
 
     const handleAddTestUserClick = () => {
+        setTestUserToEdit(null);
         setIsTestUserDialogOpen(true);
     };
 
-    const handleSaveTestUser = (newTestUser: TestUser) => {
-        if (!editedAgent) return;
-        setEditedAgent({
-            ...editedAgent,
-            testUsers: [...(editedAgent.testUsers || []), newTestUser]
-        });
-        setIsTestUserDialogOpen(false);
+    const handleEditTestUserClick = (user: TestUser) => {
+        setTestUserToEdit(user);
+        setIsTestUserDialogOpen(true);
     };
 
-    const removeTestUser = (id: string) => {
+    const handleSaveTestUser = async (newTestUser: TestUser) => {
+        if (!editedAgent || !editedAgent.id) return;
+        setIsSaving(true);
+        try {
+            // If ID is a long UUID, it already exists, so update it. Else create it.
+            let savedUser: TestUser;
+            if (newTestUser.id.length > 20) {
+                savedUser = await testUserService.update(editedAgent.id, newTestUser.id, newTestUser);
+            } else {
+                savedUser = await testUserService.create(editedAgent.id, newTestUser);
+            }
+
+            setEditedAgent(prev => {
+                if (!prev) return prev;
+                const existingIndex = (prev.testUsers || []).findIndex(u => u.id === newTestUser.id || u.id === savedUser.id);
+                if (existingIndex >= 0) {
+                    // Update existing
+                    const updatedUsers = [...(prev.testUsers || [])];
+                    updatedUsers[existingIndex] = savedUser;
+                    return { ...prev, testUsers: updatedUsers };
+                } else {
+                    // Add new
+                    return { ...prev, testUsers: [...(prev.testUsers || []), savedUser] };
+                }
+            });
+            setIsTestUserDialogOpen(false);
+        } catch (err: any) {
+            let errorMessage = 'Unknown error occurred.';
+            if (err?.response?.data?.detail) {
+                if (typeof err.response.data.detail === 'string') errorMessage = err.response.data.detail;
+                else errorMessage = JSON.stringify(err.response.data.detail, null, 2);
+            } else if (err?.message) {
+                errorMessage = err.message;
+            }
+            alert(`Failed to save test user:\n\n${errorMessage}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const removeTestUser = async (id: string) => {
         if (!editedAgent) return;
+
+        // If it's a real ID from the backend (not a temp Date.now() timestamp we just added)
+        // usually backend IDs are UUIDs (length > 20)
+        if (id.length > 20) {
+            setIsDeletingId(id);
+            try {
+                await testUserService.delete(id);
+            } catch (err: any) {
+                console.error("Failed to delete test user", err);
+                alert("Failed to delete test user from server.");
+                setIsDeletingId(null);
+                return; // halt removal from UI if backend fails
+            }
+            setIsDeletingId(null);
+        }
+
         setEditedAgent({
             ...editedAgent,
             testUsers: (editedAgent.testUsers || []).filter(user => user.id !== id)
@@ -232,8 +311,8 @@ export function EditAgentDialog({
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        console.log("Form onSubmit triggered!!");
-                        handleSave();
+                        if (step === 1) handleNextStep();
+                        else handleFinalSave();
                     }}
                 >
                     <DialogHeader>
@@ -245,14 +324,34 @@ export function EditAgentDialog({
                         </DialogDescription>
                     </DialogHeader>
 
-                    {/* Progress Bar */}
-                    <div className="flex gap-2 mt-2 mb-4 px-1">
-                        <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-muted'}`} />
-                        <div className={`h-1 flex-1 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mb-6 px-1">
-                        <span className={step >= 1 ? 'text-primary font-medium' : ''}>1. Agent Details</span>
-                        <span className={step >= 2 ? 'text-primary font-medium' : ''}>2. Evaluation Profile</span>
+                    {/* Tabs / Progress */}
+                    <div className="flex border-b mb-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (agent) setStep(1);
+                            }}
+                            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${step === 1
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                } ${!agent && step !== 1 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                            disabled={!agent && step !== 1}
+                        >
+                            1. Agent Details
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (agent) setStep(2);
+                            }}
+                            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${step === 2
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                } ${!agent && step !== 2 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                            disabled={!agent && step !== 2}
+                        >
+                            2. Evaluation Profile
+                        </button>
                     </div>
 
                     <div className="py-2">
@@ -524,15 +623,28 @@ export function EditAgentDialog({
                                                                     {user.attributes?.intentType && <span className="bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded">Intent: {user.attributes.intentType}</span>}
                                                                 </div>
                                                             </div>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => removeTestUser(user.id)}
-                                                                className="text-muted-foreground hover:text-destructive shrink-0 h-8 w-8"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                            <div className="flex gap-1 shrink-0">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    disabled={isDeletingId === user.id}
+                                                                    onClick={() => handleEditTestUserClick(user)}
+                                                                    className="text-muted-foreground hover:text-primary shrink-0 h-8 w-8"
+                                                                >
+                                                                    <Wrench className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    disabled={isDeletingId === user.id}
+                                                                    onClick={() => removeTestUser(user.id)}
+                                                                    className="text-muted-foreground hover:text-destructive shrink-0 h-8 w-8"
+                                                                >
+                                                                    {isDeletingId === user.id ? <div className="h-4 w-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                     {(editedAgent.testUsers || []).length === 0 && (
@@ -607,34 +719,33 @@ export function EditAgentDialog({
                         <DialogFooter className="mt-6 gap-2 sm:gap-0">
                             {step === 1 ? (
                                 <div className="flex justify-between w-full">
-                                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                                    <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
                                         Cancel
                                     </Button>
                                     <Button
                                         type="button"
-                                        onClick={() => setStep(2)}
+                                        onClick={handleNextStep}
                                         disabled={
+                                            isSaving ||
                                             !editedAgent.name.trim() ||
                                             !(editedAgent.description || '').trim() ||
                                             (editedAgent.endpoints || []).length === 0 ||
                                             !(editedAgent.endpoints || []).every(e => e.url.trim() !== '')
                                         }
                                     >
-                                        Next
+                                        {isSaving ? 'Creating...' : 'Next'}
                                         <ChevronRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="flex justify-between w-full">
-                                    <Button variant="outline" onClick={() => setStep(1)}>
+                                    <Button variant="outline" onClick={() => setStep(1)} type="button" disabled={isSaving}>
                                         <ChevronLeft className="mr-2 h-4 w-4" />
                                         Back
                                     </Button>
-                                    <Button type="submit" onClick={() => {
-                                        console.log("Save Button clicked!!");
-                                    }}>
+                                    <Button type="button" onClick={handleFinalSave} disabled={isSaving}>
                                         <Save className="mr-2 h-4 w-4" />
-                                        {agent ? 'Save Changes' : 'Create Agent'}
+                                        {isSaving ? 'Saving...' : (agent ? 'Save Changes' : 'Create Agent')}
                                     </Button>
                                 </div>
                             )}
@@ -648,6 +759,7 @@ export function EditAgentDialog({
                 onOpenChange={setIsTestUserDialogOpen}
                 agentName={editedAgent.name}
                 onSave={handleSaveTestUser}
+                userToEdit={testUserToEdit}
             />
         </Dialog>
     );
