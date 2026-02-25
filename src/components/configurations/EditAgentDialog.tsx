@@ -84,40 +84,41 @@ export function EditAgentDialog({
     const [isSaving, setIsSaving] = useState(false);
     const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
+    const [wasOpen, setWasOpen] = useState(false);
+
     useEffect(() => {
-        if (open) {
+        if (open && !wasOpen) {
             setStep(1);
-        }
-        if (agent) {
-            setEditedAgent({
-                ...agent,
-                endpoints: agent.endpoints || [],
-                auth: agent.auth || { type: 'none' }
-            });
-            // As per PM feedback, fetch fresh list of Test Users for the GET list request behavior
-            if (open) {
+            if (agent) {
+                setEditedAgent({
+                    ...agent,
+                    endpoints: agent.endpoints || [],
+                    auth: agent.auth || { type: 'none' }
+                });
+                // As per PM feedback, fetch fresh list of Test Users for the GET list request behavior
                 testUserService.listByAgentId(agent.id)
                     .then(users => {
                         setEditedAgent(prev => prev ? { ...prev, testUsers: users } : prev);
                     })
                     .catch(err => console.error("Failed to fetch test users:", err));
+            } else {
+                // Create new agent
+                setEditedAgent({
+                    id: Date.now().toString(),
+                    name: '',
+                    category: 'Development',
+                    description: '',
+                    status: 'Active',
+                    lastActive: 'Just now',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    endpoints: [],
+                    auth: { type: 'none' }
+                });
             }
-        } else {
-            // Create new agent
-            setEditedAgent({
-                id: Date.now().toString(),
-                name: '',
-                category: 'Development',
-                description: '',
-                status: 'Active',
-                lastActive: 'Just now',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                endpoints: [],
-                auth: { type: 'none' }
-            });
         }
-    }, [agent, open]);
+        setWasOpen(open);
+    }, [agent, open, wasOpen]);
 
     const handleNextStep = async () => {
         if (!editedAgent) return;

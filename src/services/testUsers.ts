@@ -70,10 +70,10 @@ export const testUserService = {
 
   listByAgentId: async (agentId: string) => {
     // Assuming backend filters by agent_id query param
-    const response = await apiClient.get<any, TestUserResponse[]>(
+    const response = await apiClient.get<any, { items?: TestUserResponse[] }>(
       `/test-users/test-users/?agent_id=${agentId}`,
     );
-    return (response || []).map(mapResponseToTestUser);
+    return (response?.items || []).map(mapResponseToTestUser);
   },
 
   delete: async (testUserId: string) => {
