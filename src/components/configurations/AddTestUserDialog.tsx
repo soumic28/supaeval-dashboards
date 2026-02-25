@@ -186,7 +186,7 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave, userT
                             >
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="chatHistory">Chat History (Optional)</Label>
+                                        <Label htmlFor="chatHistory">Chat History</Label>
                                         <Input
                                             id="chatHistory"
                                             placeholder="Previous turns..."
@@ -196,7 +196,7 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave, userT
                                         <p className="text-[10px] text-muted-foreground">Stores previous conversation turns</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="longTermMem">Long-Term Mem (Optional)</Label>
+                                        <Label htmlFor="longTermMem">Long-Term Mem</Label>
                                         <Input
                                             id="longTermMem"
                                             placeholder="Persistent memory data..."
