@@ -1,8 +1,9 @@
-import { Bell, Search, HelpCircle, Menu, Building2 } from 'lucide-react';
+import { Bell, Search, HelpCircle, Menu } from 'lucide-react';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useState } from 'react';
 import { NewRunModal } from '@/components/evaluations/NewRunModal';
 import { TenantManagementModal } from '@/components/tenants/TenantManagementModal';
+import { TenantSelector } from '@/components/tenants/TenantSelector';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -70,14 +71,8 @@ export function Header({ onMenuClick }: HeaderProps) {
                         Run New Eval
                     </button>
 
-                    {/* Tenant Management Button */}
-                    <button
-                        onClick={() => setIsTenantModalOpen(true)}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                        title="Manage Tenants"
-                    >
-                        <Building2 className="w-5 h-5" />
-                    </button>
+                    {/* Active Tenant Selector */}
+                    <TenantSelector />
 
                     {/* Keyboard Shortcuts Button */}
                     <button

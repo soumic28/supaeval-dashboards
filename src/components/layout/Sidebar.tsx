@@ -197,6 +197,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     "h-screen w-64 border-r border-border bg-card text-card-foreground flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out md:translate-x-0",
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 )}>
+
                 <div className="p-2 border-b border-border/50">
                     <WorkspaceSelector />
                 </div>
