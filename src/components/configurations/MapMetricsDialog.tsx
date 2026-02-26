@@ -125,7 +125,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
     };
 
     const handleDeleteLayer = async (layerId: string) => {
-        if (!confirm('Are you sure you want to delete this Metric?')) return;
+        if (!confirm('Are you sure you want to delete this Layer and all its metrics?')) return;
         try {
             await layerService.delete(layerId);
             await fetchData();
@@ -146,7 +146,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
     };
 
     const handleDeleteMetric = async (metricId: string) => {
-        if (!confirm('Are you sure you want to delete this Layer?')) return;
+        if (!confirm('Are you sure you want to delete this Metric?')) return;
         try {
             await metricService.delete(metricId);
             const next = new Set(selectedMetrics);
@@ -175,20 +175,20 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
                 <DialogHeader className="shrink-0">
-                    <DialogTitle>Configure Metrics for {agent.name}</DialogTitle>
+                    <DialogTitle>Configure Layers for {agent.name}</DialogTitle>
                     <DialogDescription>
-                        Map existing evaluation layers to this agent or create new metrics and layers on the fly.
+                        Map existing metrics to this agent or create new evaluation layers and metrics on the fly.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto pr-2 mt-4 space-y-8">
-                    {/* Metric List */}
+                    {/* Layer List */}
                     <div className="space-y-8">
                         {layers.length === 0 && !showNewLayerForm && (
                             <div className="text-center p-8 text-muted-foreground border border-dashed rounded-lg bg-card/50">
-                                <BarChart2 className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                                <p>No Metrics found.</p>
-                                <p className="text-sm">Create your first metric to start adding evaluation layers.</p>
+                                <Layers className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                                <p>No Evaluation Layers found.</p>
+                                <p className="text-sm">Create your first layer to start adding metrics.</p>
                             </div>
                         )}
 
@@ -197,12 +197,12 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
 
                             return (
                                 <div key={layer.id} className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
-                                    {/* Metric Header */}
+                                    {/* Layer Header */}
                                     {editingBackendLayerId === layer.id ? (
                                         <div className="pb-3 border-b border-border/50 space-y-4">
                                             <div className="flex items-center gap-2">
-                                                <BarChart2 className="w-5 h-5 text-primary" />
-                                                <span className="font-semibold text-lg">Edit Metric</span>
+                                                <Layers className="w-5 h-5 text-primary" />
+                                                <span className="font-semibold text-lg">Edit Layer</span>
                                             </div>
                                             <div className="grid gap-3 md:grid-cols-2">
                                                 <div className="space-y-1">
@@ -226,7 +226,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                     ) : (
                                         <div className="flex items-center justify-between pb-3 border-b border-border/50 group/header">
                                             <div className="flex items-center gap-2">
-                                                <BarChart2 className="w-5 h-5 text-primary" />
+                                                <Layers className="w-5 h-5 text-primary" />
                                                 <h3 className="font-semibold text-lg">{layer.name}</h3>
                                                 {layer.description && <Badge variant="secondary" className="font-normal">{layer.description}</Badge>}
                                             </div>
@@ -244,12 +244,12 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                         </div>
                                     )}
 
-                                    {/* Mapped Layers Grid */}
+                                    {/* Mapped Metrics Grid */}
                                     {layerMetrics.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                             {layerMetrics.map(metric => editingBackendMetricId === metric.id ? (
                                                 <div key={metric.id} className="col-span-full p-4 border rounded-lg bg-muted/10 space-y-3">
-                                                    <h4 className="text-sm font-semibold text-primary">Edit Evaluation Layer</h4>
+                                                    <h4 className="text-sm font-semibold text-primary">Edit Metric</h4>
                                                     <div className="grid gap-3 md:grid-cols-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-xs">Name</Label>
@@ -265,7 +265,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                                         <Textarea className="min-h-[60px] text-sm" value={editingBackendMetricData.judging_prompt} onChange={e => setEditingBackendMetricData({ ...editingBackendMetricData, judging_prompt: e.target.value })} />
                                                     </div>
                                                     <div className="flex gap-2 pt-1">
-                                                        <Button size="sm" onClick={() => handleUpdateMetric(metric.id)}>Save Layer</Button>
+                                                        <Button size="sm" onClick={() => handleUpdateMetric(metric.id)}>Save Metric</Button>
                                                         <Button size="sm" variant="ghost" onClick={() => setEditingBackendMetricId(null)}>Cancel</Button>
                                                     </div>
                                                 </div>
@@ -301,16 +301,16 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                         </div>
                                     ) : (
                                         <div className="text-sm text-muted-foreground italic py-2">
-                                            No evaluation layers created for this metric yet.
+                                            No metrics created for this layer yet.
                                         </div>
                                     )}
 
-                                    {/* Inline Create Layer Button/Form */}
+                                    {/* Inline Create Metric Button/Form */}
                                     <div className="pt-2">
                                         {activeNewMetricLayerId === layer.id ? (
                                             <div className="mt-2 p-4 border rounded-lg bg-muted/20 space-y-4">
                                                 <h4 className="text-sm font-semibold flex items-center gap-2">
-                                                    <Layers className="w-4 h-4 text-primary" /> Create Layer for {layer.name}
+                                                    <BarChart2 className="w-4 h-4 text-primary" /> Create Metric for {layer.name}
                                                 </h4>
                                                 <div className="grid gap-4 md:grid-cols-2">
                                                     <div className="space-y-2">
@@ -333,7 +333,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Button onClick={() => handleCreateMetric(layer.id)} disabled={isCreating || !newMetric.name} size="sm">
-                                                        Save Layer
+                                                        Save Metric
                                                     </Button>
                                                     <Button variant="ghost" size="sm" onClick={() => setActiveNewMetricLayerId(null)}>
                                                         Cancel
@@ -347,7 +347,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                                 className="text-muted-foreground hover:text-primary mt-1"
                                                 onClick={() => setActiveNewMetricLayerId(layer.id)}
                                             >
-                                                <Plus className="w-4 h-4 mr-1" /> Add New Layer
+                                                <Plus className="w-4 h-4 mr-1" /> Add New Metric
                                             </Button>
                                         )}
                                     </div>
@@ -356,12 +356,12 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                         })}
                     </div>
 
-                    {/* overarching Create Metric Button/Form */}
+                    {/* overarching Create Layer Button/Form */}
                     <div className="pt-4 border-t border-border/50">
                         {showNewLayerForm ? (
                             <div className="space-y-4 p-5 border rounded-xl bg-card shadow-sm">
                                 <h3 className="font-semibold text-lg flex items-center gap-2">
-                                    <BarChart2 className="w-5 h-5 text-primary" /> Create New Metric
+                                    <Layers className="w-5 h-5 text-primary" /> Create New Evaluation Layer
                                 </h3>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
@@ -379,7 +379,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                 </div>
                                 <div className="flex items-center gap-2 pt-2">
                                     <Button onClick={handleCreateLayer} disabled={isCreating || !newLayer.name}>
-                                        Save Metric
+                                        Save Layer
                                     </Button>
                                     <Button variant="ghost" onClick={() => setShowNewLayerForm(false)}>
                                         Cancel
@@ -393,7 +393,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                                 onClick={() => setShowNewLayerForm(true)}
                             >
                                 <Plus className="w-4 h-4 mr-2" />
-                                Create New Metric
+                                Create New Evaluation Layer
                             </Button>
                         )}
                     </div>
@@ -402,7 +402,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                 <DialogFooter className="shrink-0 mt-6 border-t pt-4">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
                     <Button onClick={handleSaveMapping} disabled={isSaving}>
-                        {isSaving ? 'Saving...' : 'Save Agent Mapping'}
+                        {isSaving ? 'Saving...' : 'Save Agent Metrics Mapping'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
