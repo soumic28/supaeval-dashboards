@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -13,10 +14,28 @@ export default function MetricsConfigPage() {
     const [loading, setLoading] = useState(true);
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const autoOpenHandled = useRef(false);
 
     useEffect(() => {
         loadAgents();
     }, []);
+
+    // Auto-open dialog when navigated with ?agentId=<id>
+    useEffect(() => {
+        if (autoOpenHandled.current || loading || agents.length === 0) return;
+        const agentId = searchParams.get('agentId');
+        if (agentId) {
+            const match = agents.find(a => a.id === agentId);
+            if (match) {
+                setSelectedAgent(match);
+                setIsDialogOpen(true);
+                autoOpenHandled.current = true;
+                // Clean up the URL param
+                setSearchParams({}, { replace: true });
+            }
+        }
+    }, [agents, loading, searchParams, setSearchParams]);
 
     const loadAgents = async () => {
         setLoading(true);

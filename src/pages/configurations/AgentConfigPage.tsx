@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -19,6 +20,7 @@ import { agentService } from '@/services/agents';
 import { testUserService } from '@/services/testUsers';
 
 export default function AgentConfigPage() {
+    const navigate = useNavigate();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -395,6 +397,9 @@ export default function AgentConfigPage() {
                 onOpenChange={setIsEditDialogOpen}
                 agent={selectedAgent}
                 onSave={handleSaveAgent}
+                onSaveAndConfigureMetrics={(savedAgent) => {
+                    navigate(`/configurations/metrics?agentId=${savedAgent.id}`);
+                }}
             />
 
             {/* Add Test User Dialog */}

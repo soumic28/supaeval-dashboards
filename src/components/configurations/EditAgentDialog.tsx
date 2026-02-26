@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import { Select } from '@/components/ui/Select';
-import { Save, Plus, Trash2, UserPlus, Brain, Database, Wrench, Users, Plug, Bot, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, UserPlus, Brain, Database, Wrench, Users, Plug, Bot, ChevronRight, ChevronLeft, BarChart2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AddTestUserDialog } from '@/components/configurations/AddTestUserDialog';
 import { testUserService } from '@/services/testUsers';
@@ -23,6 +23,7 @@ interface EditAgentDialogProps {
     onOpenChange: (open: boolean) => void;
     agent: Agent | null;
     onSave: (agent: Agent) => Promise<Agent | void>;
+    onSaveAndConfigureMetrics?: (agent: Agent) => void;
 }
 
 const AGENT_TEMPLATES = [
@@ -76,6 +77,7 @@ export function EditAgentDialog({
     onOpenChange,
     agent,
     onSave,
+    onSaveAndConfigureMetrics,
 }: EditAgentDialogProps) {
     const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
     const [isTestUserDialogOpen, setIsTestUserDialogOpen] = useState(false);
@@ -149,6 +151,9 @@ export function EditAgentDialog({
             const savedAgent = await onSave(updatedAgent);
             if (savedAgent) {
                 onOpenChange(false);
+                if (onSaveAndConfigureMetrics) {
+                    onSaveAndConfigureMetrics(savedAgent);
+                }
             }
         } finally {
             setIsSaving(false);
@@ -745,8 +750,8 @@ export function EditAgentDialog({
                                         Back
                                     </Button>
                                     <Button type="button" onClick={handleFinalSave} disabled={isSaving}>
-                                        <Save className="mr-2 h-4 w-4" />
-                                        {isSaving ? 'Saving...' : (agent ? 'Save Changes' : 'Create Agent')}
+                                        <BarChart2 className="mr-2 h-4 w-4" />
+                                        {isSaving ? 'Saving...' : 'Save & Configure Metrics'}
                                     </Button>
                                 </div>
                             )}
