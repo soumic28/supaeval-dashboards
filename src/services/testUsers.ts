@@ -59,9 +59,8 @@ export const testUserService = {
   },
 
   update: async (agentId: string, testUserId: string, user: TestUser) => {
-    // We assume backend has a PUT or PATCH for updates
     const payload = mapTestUserToCreateRequest(agentId, user);
-    const response = await apiClient.put<any, TestUserResponse>(
+    const response = await apiClient.patch<any, TestUserResponse>(
       `/test-users/test-users/${testUserId}`,
       payload,
     );
