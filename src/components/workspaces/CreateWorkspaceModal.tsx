@@ -128,6 +128,16 @@ export function CreateWorkspaceModal({ open, onOpenChange }: CreateWorkspaceModa
                             </select>
                         </div>
                         <div className="grid gap-2">
+                            <Label htmlFor="tenant_id">Tenant ID</Label>
+                            <Input
+                                id="tenant_id"
+                                value={selectedTenantId}
+                                readOnly
+                                disabled
+                                className="bg-muted"
+                            />
+                        </div>
+                        <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
                             <Input
                                 id="name"
