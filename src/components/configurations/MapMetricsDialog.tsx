@@ -11,7 +11,7 @@ import { agentService } from '@/services/agents';
 import { layerService, type LayerResponse } from '@/services/layers';
 import { metricService } from '@/services/metrics';
 import type { Agent } from '@/types/AgentTypes';
-import { Plus, BarChart2, Layers, Edit2, Trash2 } from 'lucide-react';
+import { Plus, BarChart2, Layers, Edit2, Trash2, Bot, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface MapMetricsDialogProps {
     open: boolean;
@@ -44,6 +44,8 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
 
     const [editingBackendMetricId, setEditingBackendMetricId] = useState<string | null>(null);
     const [editingBackendMetricData, setEditingBackendMetricData] = useState({ name: '', metric_type: '', judging_prompt: '' });
+
+    const [showAgentDetails, setShowAgentDetails] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -182,6 +184,69 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto pr-2 mt-4 space-y-8">
+                    {/* Agent Reference Details */}
+                    <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setShowAgentDetails(!showAgentDetails)}
+                            className="w-full flex items-center justify-between p-4 bg-muted/20 hover:bg-muted/30 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <Bot className="w-5 h-5 text-primary" />
+                                <span className="font-semibold text-sm">Agent Configuration Reference</span>
+                            </div>
+                            {showAgentDetails ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                        </button>
+
+                        {showAgentDetails && (
+                            <div className="p-4 border-t bg-muted/5 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Agent Name</Label>
+                                        <Input readOnly value={agent.name} className="h-8 bg-muted/20 text-xs text-muted-foreground cursor-not-allowed" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Category</Label>
+                                        <Input readOnly value={agent.category} className="h-8 bg-muted/20 text-xs text-muted-foreground cursor-not-allowed" />
+                                    </div>
+                                    <div className="space-y-1.5 md:col-span-2">
+                                        <Label className="text-xs text-muted-foreground">Description</Label>
+                                        <Textarea readOnly value={agent.description || 'No description provided.'} className="min-h-[60px] bg-muted/20 text-xs text-muted-foreground cursor-not-allowed resize-none" />
+                                    </div>
+                                    {agent.parallelRuns !== undefined && (
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs text-muted-foreground">Parallel Runs</Label>
+                                            <Input readOnly value={agent.parallelRuns} className="h-8 bg-muted/20 text-xs text-muted-foreground cursor-not-allowed" />
+                                        </div>
+                                    )}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">Auth Type</Label>
+                                        <Input readOnly value={agent.auth?.type || 'none'} className="h-8 bg-muted/20 text-xs text-muted-foreground cursor-not-allowed uppercase" />
+                                    </div>
+                                    {agent.auth?.clientId && (
+                                        <div className="space-y-1.5 md:col-span-2">
+                                            <Label className="text-xs text-muted-foreground">Client ID</Label>
+                                            <Input readOnly value={agent.auth.clientId} className="h-8 bg-muted/20 text-xs text-muted-foreground cursor-not-allowed" />
+                                        </div>
+                                    )}
+                                    {agent.endpoints && agent.endpoints.length > 0 && (
+                                        <div className="space-y-1.5 md:col-span-2">
+                                            <Label className="text-xs text-muted-foreground">Endpoints</Label>
+                                            <div className="space-y-2">
+                                                {agent.endpoints.map(ep => (
+                                                    <div key={ep.id} className="flex gap-2">
+                                                        <Input readOnly value={ep.method} className="h-8 w-20 bg-muted/20 text-xs shrink-0 font-medium text-muted-foreground cursor-not-allowed" />
+                                                        <Input readOnly value={ep.url} className="h-8 bg-muted/20 text-xs flex-1 text-muted-foreground cursor-not-allowed" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Layer List */}
                     <div className="space-y-8">
                         {layers.length === 0 && !showNewLayerForm && (
