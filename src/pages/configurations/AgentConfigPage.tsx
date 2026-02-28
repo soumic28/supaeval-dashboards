@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -45,6 +45,32 @@ export default function AgentConfigPage() {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const autoOpenHandled = useRef(false);
+
+    useEffect(() => {
+        if (autoOpenHandled.current || loading || agents.length === 0) return;
+
+        const createParam = searchParams.get('create');
+        if (createParam === 'true') {
+            handleCreateAgent();
+            autoOpenHandled.current = true;
+            setSearchParams({}, { replace: true });
+            return;
+        }
+
+        const editId = searchParams.get('edit');
+        if (editId) {
+            const match = agents.find(a => a.id === editId);
+            if (match) {
+                setSelectedAgent(match);
+                setIsEditDialogOpen(true);
+                autoOpenHandled.current = true;
+                setSearchParams({}, { replace: true });
+            }
+        }
+    }, [agents, loading, searchParams, setSearchParams]);
 
     const fetchAgents = async () => {
         try {

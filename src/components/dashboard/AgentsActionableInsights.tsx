@@ -5,13 +5,28 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { agentService } from '@/services/agents';
 import type { Agent } from '@/types/AgentTypes';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, MoreVertical, Edit2, Plus, Layers as LayersIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
 
 export function AgentsActionableInsights() {
     const navigate = useNavigate();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const menuRef = useRef<HTMLTableCellElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchAgents = async () => {
@@ -96,8 +111,8 @@ export function AgentsActionableInsights() {
                 <CardTitle className="text-lg font-semibold text-foreground">Agents Health & Status</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="relative w-full overflow-auto">
-                    <table className="w-full caption-bottom text-sm">
+                <div className="relative w-full overflow-visible">
+                    <table className="w-full caption-bottom text-sm select-none">
                         <thead className="[&_tr]:border-b border-border">
                             <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                 <th className="h-10 px-6 text-left align-middle font-medium text-muted-foreground whitespace-nowrap">Agent Name</th>
@@ -105,6 +120,7 @@ export function AgentsActionableInsights() {
                                 <th className="h-10 px-6 text-left align-middle font-medium text-muted-foreground whitespace-nowrap">Improvement Dataset</th>
                                 <th className="h-10 px-6 text-left align-middle font-medium text-muted-foreground whitespace-nowrap">Runs</th>
                                 <th className="h-10 px-6 text-left align-middle font-medium text-muted-foreground whitespace-nowrap">SEQ Score</th>
+                                <th className="h-10 px-6 text-right align-middle font-medium text-muted-foreground whitespace-nowrap w-[50px]"></th>
                             </tr>
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0 text-zinc-600">
@@ -129,6 +145,71 @@ export function AgentsActionableInsights() {
                                             >
                                                 {metrics.seq}%
                                             </Badge>
+                                        </td>
+                                        <td
+                                            className="p-6 align-middle text-right relative"
+                                            ref={openMenuId === agent.id ? menuRef : null}
+                                        >
+                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(openMenuId === agent.id ? null : agent.id);
+                                                }}
+                                                className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                                            >
+                                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                            </motion.button>
+
+                                            <AnimatePresence>
+                                                {openMenuId === agent.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="absolute right-6 top-12 z-50 min-w-[200px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none text-left"
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate(`/configurations/agents?edit=${agent.id}`);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                                                            >
+                                                                <Edit2 className="mr-2 h-4 w-4" />
+                                                                <span>Edit Configuration</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate(`/configurations/metrics?agentId=${agent.id}`);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                                                            >
+                                                                <LayersIcon className="mr-2 h-4 w-4" />
+                                                                <span>Configure Layers</span>
+                                                            </button>
+                                                            <div className="h-px bg-border my-1 mx-1" />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate('/configurations/agents?create=true');
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                                                            >
+                                                                <Plus className="mr-2 h-4 w-4" />
+                                                                <span>Create New Agent</span>
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </td>
                                     </tr>
                                 );
