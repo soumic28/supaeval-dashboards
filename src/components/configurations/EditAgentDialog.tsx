@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/Dialog';
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -312,26 +312,27 @@ export function EditAgentDialog({
     if (!editedAgent) return null;
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[90vw]">
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="flex flex-col gap-0 p-0">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
                         if (step === 1) handleNextStep();
                         else handleFinalSave();
                     }}
+                    className="flex flex-col h-full"
                 >
-                    <DialogHeader>
-                        <DialogTitle>
+                    <SheetHeader className="p-6 pb-2 shrink-0">
+                        <SheetTitle>
                             {agent ? 'Edit Agent' : 'Create New Agent'}
-                        </DialogTitle>
-                        <DialogDescription>
+                        </SheetTitle>
+                        <SheetDescription>
                             {agent ? 'Configure your agent details and settings.' : 'Choose a template to get started or configure manually.'}
-                        </DialogDescription>
-                    </DialogHeader>
+                        </SheetDescription>
+                    </SheetHeader>
 
                     {/* Tabs / Progress */}
-                    <div className="flex border-b mb-6">
+                    <div className="flex border-b mb-6 px-6 shrink-0">
                         <button
                             type="button"
                             onClick={() => {
@@ -360,7 +361,7 @@ export function EditAgentDialog({
                         </button>
                     </div>
 
-                    <div className="py-2">
+                    <div className="py-2 flex-1 overflow-y-auto px-6">
                         <AnimatePresence mode="wait">
                             {step === 1 && (
                                 <motion.div
@@ -369,7 +370,7 @@ export function EditAgentDialog({
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
                                     transition={{ duration: 0.2 }}
-                                    className="space-y-6"
+                                    className="space-y-6 pb-6"
                                 >
                                     {/* Template Selection (only for new agents) */}
                                     {!agent && (
@@ -597,7 +598,7 @@ export function EditAgentDialog({
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
                                     transition={{ duration: 0.2 }}
-                                    className="space-y-6"
+                                    className="space-y-6 pb-6"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-4">
@@ -721,8 +722,8 @@ export function EditAgentDialog({
                         </AnimatePresence>
                     </div>
 
-                    <div className="pointer-events-auto relative z-50">
-                        <DialogFooter className="mt-6 gap-2 sm:gap-0">
+                    <div className="pointer-events-auto relative z-50 shrink-0 border-t p-6 mt-auto bg-background">
+                        <SheetFooter className="gap-2 sm:gap-0 mt-0">
                             {step === 1 ? (
                                 <div className="flex justify-between w-full">
                                     <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
@@ -755,10 +756,10 @@ export function EditAgentDialog({
                                     </Button>
                                 </div>
                             )}
-                        </DialogFooter>
+                        </SheetFooter>
                     </div>
                 </form>
-            </DialogContent>
+            </SheetContent>
 
             <AddTestUserDialog
                 open={isTestUserDialogOpen}
@@ -767,7 +768,7 @@ export function EditAgentDialog({
                 onSave={handleSaveTestUser}
                 userToEdit={testUserToEdit}
             />
-        </Dialog>
+        </Sheet>
     );
 }
 

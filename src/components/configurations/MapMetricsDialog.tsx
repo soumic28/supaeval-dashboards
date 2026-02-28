@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-    Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/Dialog';
+    Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
+} from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -174,16 +174,16 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-                <DialogHeader className="shrink-0">
-                    <DialogTitle>Configure Layers for {agent.name}</DialogTitle>
-                    <DialogDescription>
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="flex flex-col gap-0 p-0">
+                <SheetHeader className="shrink-0 p-6 pb-2">
+                    <SheetTitle>Configure Layers for {agent.name}</SheetTitle>
+                    <SheetDescription>
                         Map existing metrics to this agent or create new evaluation layers and metrics on the fly.
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto pr-2 mt-4 space-y-8">
+                <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-8">
                     {/* Agent Reference Details */}
                     <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
                         <button
@@ -464,13 +464,13 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                     </div>
                 </div>
 
-                <DialogFooter className="shrink-0 mt-6 border-t pt-4">
+                <SheetFooter className="shrink-0 border-t p-6 mt-auto">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
                     <Button onClick={handleSaveMapping} disabled={isSaving}>
                         {isSaving ? 'Saving...' : 'Save Agent Metrics Mapping'}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
     );
 }
