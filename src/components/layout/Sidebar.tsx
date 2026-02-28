@@ -14,7 +14,9 @@ import {
     Bot,
     RefreshCw,
     LineChart,
-    LogOut
+    LogOut,
+    PanelLeftClose,
+    PanelLeftOpen
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { WorkspaceSelector } from '@/components/workspaces/WorkspaceSelector';
@@ -91,7 +93,17 @@ const bottomNavItems: NavItem[] = [
     { name: 'Team', icon: Users, path: '/team' },
 ];
 
-export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function Sidebar({
+    isOpen,
+    onClose,
+    isCollapsed = false,
+    onToggleCollapse
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
+}) {
     const { logout } = useAuth();
     const location = useLocation();
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -120,24 +132,33 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             return (
                 <div className="space-y-1">
                     <button
-                        onClick={() => toggleSection(item.name)}
+                        onClick={() => {
+                            if (isCollapsed && onToggleCollapse) {
+                                onToggleCollapse();
+                            }
+                            toggleSection(item.name);
+                        }}
+                        title={isCollapsed ? item.name : undefined}
                         className={cn(
                             "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                            isCollapsed && "justify-center px-0",
                             isChildActive ? "text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
-                        <div className="flex items-center gap-3">
+                        <div className={cn("flex items-center gap-3", isCollapsed && "gap-0 justify-center")}>
                             {item.icon && <item.icon className="w-4 h-4" />}
-                            <span>{item.name}</span>
+                            {!isCollapsed && <span>{item.name}</span>}
                         </div>
-                        {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        {!isCollapsed && (
+                            isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            )
                         )}
                     </button>
 
-                    {isExpanded && (
+                    {(!isCollapsed && isExpanded) && (
                         <div className="pl-9 space-y-1">
                             {item.children!.map((child) => (
                                 <NavLink
@@ -166,9 +187,11 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <NavLink
                 to={item.path!}
                 onClick={() => onClose()}
+                title={isCollapsed ? item.name : undefined}
                 className={({ isActive }) =>
                     cn(
-                        "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                        "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                        isCollapsed ? "justify-center px-0 gap-0" : "gap-3",
                         isActive
                             ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -176,7 +199,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 }
             >
                 {item.icon && <item.icon className="w-4 h-4" />}
-                <span>{item.name}</span>
+                {!isCollapsed && <span>{item.name}</span>}
             </NavLink>
         );
     };
@@ -194,15 +217,24 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <div
                 data-tour="sidebar"
                 className={cn(
-                    "h-screen w-64 border-r border-border bg-card text-card-foreground flex flex-col fixed left-0 top-0 z-50 transition-transform duration-300 ease-in-out md:translate-x-0",
+                    "h-screen border-r border-border bg-card text-card-foreground flex flex-col fixed left-0 top-0 z-50 transition-all duration-300 ease-in-out md:translate-x-0 group",
+                    isCollapsed ? "w-20" : "w-64",
                     isOpen ? "translate-x-0" : "-translate-x-full"
                 )}>
 
-                <div className="p-2 border-b border-border/50">
-                    <WorkspaceSelector />
+                <div className="p-2 border-b border-border/50 relative">
+                    <WorkspaceSelector isCollapsed={isCollapsed} />
+                    {onToggleCollapse && (
+                        <button
+                            onClick={onToggleCollapse}
+                            className="hidden md:flex absolute top-4 right-[-12px] h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted text-muted-foreground z-50 transition-colors"
+                        >
+                            {isCollapsed ? <PanelLeftOpen className="h-3 w-3 relative right-[1px]" /> : <PanelLeftClose className="h-3 w-3 relative right-[1px]" />}
+                        </button>
+                    )}
                 </div>
 
-                <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
                     {navItems.map((item) => (
                         <NavItemComponent key={item.name} item={item} />
                     ))}
@@ -214,16 +246,19 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                             key={item.path}
                             to={item.path!}
                             onClick={() => onClose()}
+                            title={isCollapsed ? item.name : undefined}
                             className={({ isActive }) =>
                                 cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                                    "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                                    isCollapsed ? "justify-center px-0 gap-0" : "gap-3",
                                     isActive
                                         ? "bg-primary/10 text-primary"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                 )
                             }
                         >
-                            <span>{item.name}</span>
+                            {item.icon && <item.icon className="w-4 h-4" />}
+                            {!isCollapsed && <span>{item.name}</span>}
                         </NavLink>
                     ))}
                     <button
@@ -231,10 +266,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                             logout();
                             onClose();
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+                        title={isCollapsed ? "Logout" : undefined}
+                        className={cn(
+                            "w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors",
+                            isCollapsed ? "justify-center px-0 gap-0" : "gap-3"
+                        )}
                     >
                         <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        {!isCollapsed && <span>Logout</span>}
                     </button>
                 </div>
             </div>

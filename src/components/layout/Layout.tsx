@@ -17,6 +17,19 @@ export function Layout() {
     const { profile } = useUserProfile();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+        const saved = localStorage.getItem('sidebar_collapsed');
+        return saved ? saved === 'true' : false;
+    });
+
+    const toggleSidebarCollapse = () => {
+        setIsSidebarCollapsed(prev => {
+            const newState = !prev;
+            localStorage.setItem('sidebar_collapsed', String(newState));
+            return newState;
+        });
+    };
+
     const [showCommandPalette, setShowCommandPalette] = useState(false);
     const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
@@ -131,8 +144,13 @@ export function Layout() {
             />
 
             <div className="min-h-screen bg-background font-sans antialiased flex">
-                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${sidebarOpen ? 'md:ml-64' : 'md:ml-64'} ml-0`}>
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggleCollapse={toggleSidebarCollapse}
+                />
+                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0`}>
                     <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
                         <div className="max-w-7xl mx-auto w-full animate-in fade-in duration-500">

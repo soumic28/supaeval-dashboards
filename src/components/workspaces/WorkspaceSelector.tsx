@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/Select';
 import { Loader2 } from 'lucide-react';
 import { Building2 } from 'lucide-react';
 
-export function WorkspaceSelector() {
+export function WorkspaceSelector({ isCollapsed = false }: { isCollapsed?: boolean }) {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { workspaces, isLoading } = useWorkspaces();
@@ -65,7 +65,38 @@ export function WorkspaceSelector() {
 
 
 
-    if (isLoading) return <div className="p-2"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+    if (isLoading) return <div className="p-2 flex justify-center"><Loader2 className="h-4 w-4 animate-spin" /></div>;
+
+    if (isCollapsed) {
+        return (
+            <div className="flex justify-center py-2 relative group" title={`Workspace: ${activeWorkspace?.name || "None"}`}>
+                <CreateWorkspaceModal open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+                <div className="w-10 h-10 flex items-center justify-center rounded-md bg-muted/30 border border-border/50 hover:bg-muted/80 transition-colors relative">
+                    <Building2 className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
+                    <Select
+                        key={activeWorkspace?.id || "empty"}
+                        value={activeWorkspace?.id || ""}
+                        onChange={onValueChange}
+                        disabled={isLoading || isSwitching}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                        {!activeWorkspace && <option value="" disabled>Select Workspace</option>}
+                        {workspaces?.map((workspace) => (
+                            <option key={workspace.id} value={workspace.id}>
+                                {workspace.name}
+                            </option>
+                        ))}
+                        <option disabled>──────────</option>
+                        <option value="__create__">+ Create New Workspace</option>
+                        <option value="__settings__">⚙ Workspace Settings</option>
+                    </Select>
+                    {activeWorkspace?.is_active !== false && (
+                        <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full border border-background"></div>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="px-1 py-1">
