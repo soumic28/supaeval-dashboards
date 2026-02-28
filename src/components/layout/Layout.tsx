@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { GlobalBreadcrumbs } from './GlobalBreadcrumbs';
 import { useState, useEffect } from 'react';
 import { Toaster } from '../ui/Toaster';
 import { CommandPalette } from '../CommandPalette';
@@ -153,6 +154,7 @@ export function Layout() {
                 <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} ml-0`}>
                     <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+                        <GlobalBreadcrumbs />
                         <div className="max-w-7xl mx-auto w-full animate-in fade-in duration-500">
                             <Outlet />
                         </div>
