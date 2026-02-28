@@ -186,22 +186,24 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave, userT
                             >
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="chatHistory">Chat History</Label>
-                                        <Input
+                                        <Label htmlFor="chatHistory">Chat History <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                                        <Textarea
                                             id="chatHistory"
-                                            placeholder="Previous turns..."
+                                            placeholder="Paste previous conversation turns or JSON..."
                                             value={chatHistory}
                                             onChange={(e) => setChatHistory(e.target.value)}
+                                            className="min-h-[80px] resize-y font-mono text-xs"
                                         />
                                         <p className="text-[10px] text-muted-foreground">Stores previous conversation turns</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="longTermMem">Long-Term Mem</Label>
-                                        <Input
+                                        <Label htmlFor="longTermMem">Long-Term Mem <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                                        <Textarea
                                             id="longTermMem"
-                                            placeholder="Persistent memory data..."
+                                            placeholder="Paste persistent memory data or JSON..."
                                             value={longTermMem}
                                             onChange={(e) => setLongTermMem(e.target.value)}
+                                            className="min-h-[80px] resize-y font-mono text-xs"
                                         />
                                         <p className="text-[10px] text-muted-foreground">Used to evaluate personalization and recall</p>
                                     </div>
@@ -286,7 +288,7 @@ export function AddTestUserDialog({ open, onOpenChange, agentName, onSave, userT
                                 <ChevronLeft className="mr-2 h-4 w-4" />
                                 Back
                             </Button>
-                            <Button type="button" onClick={handleSubmit} disabled={!chatHistory.trim() || !longTermMem.trim()}>
+                            <Button type="button" onClick={handleSubmit}>
                                 <Save className="mr-2 h-4 w-4" />
                                 Save Profile
                             </Button>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -19,6 +20,7 @@ import { agentService } from '@/services/agents';
 import { testUserService } from '@/services/testUsers';
 
 export default function AgentConfigPage() {
+    const navigate = useNavigate();
     const [agents, setAgents] = useState<Agent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,32 @@ export default function AgentConfigPage() {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const autoOpenHandled = useRef(false);
+
+    useEffect(() => {
+        if (autoOpenHandled.current || loading || agents.length === 0) return;
+
+        const createParam = searchParams.get('create');
+        if (createParam === 'true') {
+            handleCreateAgent();
+            autoOpenHandled.current = true;
+            setSearchParams({}, { replace: true });
+            return;
+        }
+
+        const editId = searchParams.get('edit');
+        if (editId) {
+            const match = agents.find(a => a.id === editId);
+            if (match) {
+                setSelectedAgent(match);
+                setIsEditDialogOpen(true);
+                autoOpenHandled.current = true;
+                setSearchParams({}, { replace: true });
+            }
+        }
+    }, [agents, loading, searchParams, setSearchParams]);
 
     const fetchAgents = async () => {
         try {
@@ -395,6 +423,9 @@ export default function AgentConfigPage() {
                 onOpenChange={setIsEditDialogOpen}
                 agent={selectedAgent}
                 onSave={handleSaveAgent}
+                onSaveAndConfigureMetrics={(savedAgent) => {
+                    navigate(`/configurations/metrics?agentId=${savedAgent.id}`);
+                }}
             />
 
             {/* Add Test User Dialog */}

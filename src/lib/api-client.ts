@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 // Create a global Axios instance
 export const apiClient = axios.create({
@@ -57,6 +58,12 @@ apiClient.interceptors.response.use(
       status: error.response?.status,
       original: error,
     };
+
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: customError.message,
+    });
 
     return Promise.reject(customError);
   },
