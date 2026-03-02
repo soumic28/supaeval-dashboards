@@ -1,54 +1,69 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import type { User, TestUser } from "@/types/models";
 
 export const userService = {
   // Human Users
   create: async (data: any) => {
-    // Uses form-urlencoded content type as per Swagger
-    return apiClient.post<any, User>("/admin/user-create", data, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
+    logger.info("userService: Creating new admin user", data);
+    try {
+      // Uses form-urlencoded content type as per Swagger
+      const response = await apiClient.post<any, User>(
+        "/admin/user-create",
+        data,
+        {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        },
+      );
+      logger.info(
+        `userService: Successfully created admin user ${response.id}`,
+      );
+      return response;
+    } catch (error) {
+      logger.error("userService: Failed to create admin user", error);
+      throw error;
+    }
   },
 
   getAll: async () => {
-    // return apiClient.get<any, User[]>("/users");
-    console.warn("API does not support /users yet");
+    logger.warn("userService: API does not support /users yet");
     return { data: [] };
   },
 
-  updateProfile: async (_id: string, _data: Partial<User>) => {
-    // return apiClient.patch<any, User>(`/users/${id}`, data);
-    console.warn("API does not support /users update yet");
+  updateProfile: async (id: string, _data: Partial<User>) => {
+    logger.warn(
+      `userService: API does not support profile update for ${id} yet`,
+    );
     return { data: {} };
   },
 
   // Test Users (Personas) - Endpoint not in OpenAPI
-  getTestUsers: async (_workspaceId: string) => {
-    // return apiClient.get<any, TestUser[]>(
-    //   `/workspaces/${workspaceId}/test-users`,
-    // );
-    console.warn("API does not support /test-users yet");
+  getTestUsers: async (workspaceId: string) => {
+    logger.warn(
+      `userService: API does not support /test-users for workspace ${workspaceId} yet`,
+    );
     return { data: [] };
   },
 
-  createTestUser: async (_workspaceId: string, _data: Partial<TestUser>) => {
-    // return apiClient.post<any, TestUser>(
-    //   `/workspaces/${workspaceId}/test-users`,
-    //   data,
-    // );
-    console.warn("API does not support /test-users create yet");
+  createTestUser: async (workspaceId: string, data: Partial<TestUser>) => {
+    logger.warn(
+      `userService: API does not support /test-users creation for workspace ${workspaceId} yet`,
+      data,
+    );
     return { data: {} };
   },
 
-  updateTestUser: async (_id: string, _data: Partial<TestUser>) => {
-    // return apiClient.patch<any, TestUser>(`/test-users/${id}`, data);
-    console.warn("API does not support /test-users update yet");
+  updateTestUser: async (id: string, _data: Partial<TestUser>) => {
+    logger.warn(
+      `userService: API does not support /test-users update for ${id} yet`,
+    );
     return { data: {} };
   },
 
-  deleteTestUser: async (_id: string) => {
-    // return apiClient.delete(`/test-users/${id}`);
-    console.warn("API does not support /test-users delete yet");
+  deleteTestUser: async (id: string) => {
+    logger.warn(
+      `userService: API does not support /test-users delete for ${id} yet`,
+    );
     return { data: {} };
   },
 };

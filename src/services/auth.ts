@@ -1,9 +1,21 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import type { AuthResponse, ApiKey } from "@/types/models";
 
 export const authService = {
   login: async (credentials: { email: string; password?: string }) => {
-    return apiClient.post<any, AuthResponse>("/auth/login", credentials);
+    logger.debug(`authService: Attempting login for ${credentials.email}`);
+    try {
+      const result = await apiClient.post<any, AuthResponse>(
+        "/auth/login",
+        credentials,
+      );
+      logger.info(`authService: Login successful for ${credentials.email}`);
+      return result;
+    } catch (error) {
+      logger.error(`authService: Login failed for ${credentials.email}`, error);
+      throw error;
+    }
   },
 
   signup: async (credentials: {
@@ -11,35 +23,106 @@ export const authService = {
     password?: string;
     name?: string;
   }) => {
-    // API returns user_id, access_token, token_type
-    return apiClient.post<any, any>("/auth/signup", credentials);
+    logger.info(`authService: Attempting signup for ${credentials.email}`);
+    try {
+      const result = await apiClient.post<any, any>(
+        "/auth/signup",
+        credentials,
+      );
+      logger.info(`authService: Signup successful for ${credentials.email}`);
+      return result;
+    } catch (error) {
+      logger.error(
+        `authService: Signup failed for ${credentials.email}`,
+        error,
+      );
+      throw error;
+    }
   },
 
   logout: async () => {
-    return apiClient.post("/auth/logout");
+    logger.info("authService: Executing backend logout");
+    try {
+      const result = await apiClient.post("/auth/logout");
+      logger.info("authService: Backend logout successful");
+      return result;
+    } catch (error) {
+      logger.error("authService: Backend logout failed", error);
+      throw error;
+    }
   },
 
   getProfile: async () => {
-    return apiClient.get<any, AuthResponse>("/auth/me");
+    logger.debug("authService: Fetching current profile");
+    try {
+      const result = await apiClient.get<any, AuthResponse>("/auth/me");
+      logger.debug("authService: Profile fetched successfully");
+      return result;
+    } catch (error) {
+      logger.error("authService: Failed to fetch profile", error);
+      throw error;
+    }
   },
 
   refreshToken: async () => {
-    return apiClient.post<any, AuthResponse>("/auth/refresh-token");
+    logger.debug("authService: Refreshing session token");
+    try {
+      const result = await apiClient.post<any, AuthResponse>(
+        "/auth/refresh-token",
+      );
+      logger.info("authService: Token refreshed successfully");
+      return result;
+    } catch (error) {
+      logger.error("authService: Token refresh failed", error);
+      throw error;
+    }
   },
 
   // API Keys
   createApiKey: async (data: { name: string; expires_at?: string | null }) => {
-    return apiClient.post<any, ApiKey & { api_key: string }>("/auth/api-keys", {
-      name: data.name,
-      expires_at: data.expires_at,
-    });
+    logger.info(`authService: Creating API key "${data.name}"`);
+    try {
+      const result = await apiClient.post<any, ApiKey & { api_key: string }>(
+        "/auth/api-keys",
+        {
+          name: data.name,
+          expires_at: data.expires_at,
+        },
+      );
+      logger.info(`authService: API key "${data.name}" created successfully`);
+      return result;
+    } catch (error) {
+      logger.error(
+        `authService: Failed to create API key "${data.name}"`,
+        error,
+      );
+      throw error;
+    }
   },
 
   getApiKeys: async () => {
-    return apiClient.get<any, ApiKey[]>("/auth/api-keys");
+    logger.debug("authService: Fetching API keys");
+    try {
+      const result = await apiClient.get<any, ApiKey[]>("/auth/api-keys");
+      logger.info(
+        `authService: Successfully fetched ${result.length} API keys`,
+      );
+      return result;
+    } catch (error) {
+      logger.error("authService: Failed to fetch API keys", error);
+      throw error;
+    }
   },
 
   deleteApiKey: async (keyId: string) => {
-    return apiClient.delete(`/auth/api-keys/${keyId}`);
+    logger.info(`authService: Deleting API key ${keyId}`);
+    try {
+      const result = await apiClient.delete(`/auth/api-keys/${keyId}`);
+      logger.info(`authService: API key ${keyId} deleted successfully`);
+      return result;
+    } catch (error) {
+      logger.error(`authService: Failed to delete API key ${keyId}`, error);
+      throw error;
+    }
   },
 };

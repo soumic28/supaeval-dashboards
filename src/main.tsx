@@ -5,7 +5,9 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from "./components/theme-provider"
 import { ErrorBoundary } from "./components/layout/ErrorBoundary"
+import { logger } from "@/lib/logger";
 
+// Initialize Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -15,6 +17,9 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+// Startup Log - Should be visible if 'Info' is enabled in console
+logger.info(`SupaEval Dashboard starting up in ${import.meta.env.MODE} mode`);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
