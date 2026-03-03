@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import type {
   Agent,
   AgentResponse,
@@ -20,7 +21,10 @@ const mapDtoToAgent = (dto: AgentResponse): Agent => {
           ? JSON.parse(dto.metadata.frontend_details)
           : dto.metadata.frontend_details;
     } catch (e) {
-      console.error("Failed to parse frontend_details", e);
+      logger.error(
+        `mapDtoToAgent: Failed to parse frontend_details for agent ${dto.id}`,
+        e,
+      );
     }
   }
 
@@ -108,34 +112,74 @@ const mapAgentToUpdateRequest = (agent: Partial<Agent>): AgentUpdateRequest => {
 
 export const agentService = {
   getAll: async () => {
-    const response = await apiClient.get<any, AgentResponse[]>("/agents");
-    return response.map(mapDtoToAgent);
+    logger.debug("agentService: Fetching all agents");
+    try {
+      const response = await apiClient.get<any, AgentResponse[]>("/agents");
+      logger.info(
+        `agentService: Successfully fetched ${response.length} agents`,
+      );
+      return response.map(mapDtoToAgent);
+    } catch (error) {
+      logger.error("agentService: Failed to fetch agents", error);
+      throw error;
+    }
   },
 
   getOne: async (id: string) => {
-    const response = await apiClient.get<any, AgentResponse>(`/agents/${id}`);
-    return mapDtoToAgent(response);
+    logger.debug(`agentService: Fetching agent ${id}`);
+    try {
+      const response = await apiClient.get<any, AgentResponse>(`/agents/${id}`);
+      logger.info(
+        `agentService: Successfully fetched agent ${id} (${response.name})`,
+      );
+      return mapDtoToAgent(response);
+    } catch (error) {
+      logger.error(`agentService: Failed to fetch agent ${id}`, error);
+      throw error;
+    }
   },
 
   create: async (data: Partial<Agent>) => {
+    logger.info(`agentService: Creating new agent: ${data.name}`);
     const payload = mapAgentToCreateRequest(data);
-    const response = await apiClient.post<any, AgentResponse>(
-      "/agents",
-      payload,
-    );
-    return mapDtoToAgent(response);
+    try {
+      const response = await apiClient.post<any, AgentResponse>(
+        "/agents",
+        payload,
+      );
+      logger.info(`agentService: Successfully created agent ${response.id}`);
+      return mapDtoToAgent(response);
+    } catch (error) {
+      logger.error("agentService: Failed to create agent", error);
+      throw error;
+    }
   },
 
   update: async (id: string, data: Partial<Agent>) => {
+    logger.info(`agentService: Updating agent ${id}`);
     const payload = mapAgentToUpdateRequest(data);
-    const response = await apiClient.patch<any, AgentResponse>(
-      `/agents/${id}`,
-      payload,
-    );
-    return mapDtoToAgent(response);
+    try {
+      const response = await apiClient.patch<any, AgentResponse>(
+        `/agents/${id}`,
+        payload,
+      );
+      logger.info(`agentService: Successfully updated agent ${id}`);
+      return mapDtoToAgent(response);
+    } catch (error) {
+      logger.error(`agentService: Failed to update agent ${id}`, error);
+      throw error;
+    }
   },
 
   delete: async (id: string) => {
-    return apiClient.delete(`/agents/${id}`);
+    logger.info(`agentService: Deleting agent ${id}`);
+    try {
+      const result = await apiClient.delete(`/agents/${id}`);
+      logger.info(`agentService: Successfully deleted agent ${id}`);
+      return result;
+    } catch (error) {
+      logger.error(`agentService: Failed to delete agent ${id}`, error);
+      throw error;
+    }
   },
 };

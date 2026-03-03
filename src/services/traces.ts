@@ -1,33 +1,48 @@
 import { apiClient } from "@/lib/api-client";
-// import type { Trace } from "@/types/models"; // Unused for now as we use any[] for flexible ingestion matching
+import { logger } from "@/lib/logger";
 
 export const traceService = {
   // Ingest full traces (POST /v1/traces/ingest)
   ingest: async (data: { traces: any[]; sdk?: any; resource?: any }) => {
-    return apiClient.post("/traces/ingest", {
-      sent_at: new Date().toISOString(),
-      sdk: data.sdk || {
-        name: "web-sdk",
-        version: "1.0.0",
-        language: "typescript",
-      },
-      resource: data.resource || {},
-      traces: data.traces,
-    });
+    logger.info(`traceService: Ingesting ${data.traces?.length} traces`);
+    try {
+      const response = await apiClient.post("/traces/ingest", {
+        sent_at: new Date().toISOString(),
+        sdk: data.sdk || {
+          name: "web-sdk",
+          version: "1.0.0",
+          language: "typescript",
+        },
+        resource: data.resource || {},
+        traces: data.traces,
+      });
+      logger.info("traceService: Successful trace ingestion");
+      return response;
+    } catch (error) {
+      logger.error("traceService: Trace ingestion failed", error);
+      throw error;
+    }
   },
 
   // Ingest specific events (POST /v1/traces)
   ingestEvents: async (events: any[]) => {
-    // API expects a list of events or a specific structure?
-    // Based on typical patterns: { events: [...] } or just [...]
-    // The user request says `POST /v1/traces` -> Ingest Events.
-    // Assuming array or wrapper. Let's try wrapper as it's safer for extensions.
-    return apiClient.post("/traces", { events });
+    logger.info(
+      `traceService: Ingesting ${events.length} individual trace events`,
+    );
+    try {
+      const response = await apiClient.post("/traces", { events });
+      logger.info("traceService: Successful events ingestion");
+      return response;
+    } catch (error) {
+      logger.error("traceService: Events ingestion failed", error);
+      throw error;
+    }
   },
 
-  getById: async (_id: string) => {
-    // keeping mock for now as per instructions/findings
-    console.warn("API: GET /traces/:id not implemented/found");
+  getById: async (id: string) => {
+    logger.warn(
+      `traceService: GET /traces/${id} not fully implemented in backend yet`,
+    );
     return { data: {} };
   },
 
@@ -36,12 +51,28 @@ export const traceService = {
     runId: string,
     params?: { page?: number; page_size?: number },
   ) => {
-    return apiClient.get(`/traces/runs/${runId}/events`, { params });
+    logger.debug(`traceService: Fetching events for run ${runId}`, params);
+    try {
+      const response = await apiClient.get<any, any>(
+        `/traces/runs/${runId}/events`,
+        { params },
+      );
+      logger.info(`traceService: Successfully fetched events for run ${runId}`);
+      return response;
+    } catch (error) {
+      logger.error(
+        `traceService: Failed to fetch events for run ${runId}`,
+        error,
+      );
+      throw error;
+    }
   },
 
   /** @deprecated Not in Swagger */
-  getByAgent: async (_agentId: string) => {
-    console.warn("API: GET /agents/:id/traces not found in swagger");
+  getByAgent: async (agentId: string) => {
+    logger.warn(
+      `traceService: getByAgent(${agentId}) called but not found in backend swagger`,
+    );
     return { data: [] };
   },
 };

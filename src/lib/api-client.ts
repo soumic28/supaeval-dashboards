@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "@/components/ui/use-toast";
+import { logger } from "./logger";
 
 // Create a global Axios instance
 export const apiClient = axios.create({
@@ -15,15 +16,22 @@ export const apiClient = axios.create({
 // Request Interceptor: Auto-attach Authorization token
 apiClient.interceptors.request.use(
   (config) => {
-    // TODO: Retrieve token from your auth store (e.g., localStorage, Zustand, Context)
     const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Log the request
+    logger.logApiRequest(
+      config.method?.toUpperCase() || "GET",
+      config.url || "",
+      config.data,
+    );
+
     return config;
   },
   (error) => {
-    console.error("❌ API Request Error:", error);
+    logger.error("❌ API Request Error:", error);
     return Promise.reject(error);
   },
 );
@@ -31,22 +39,31 @@ apiClient.interceptors.request.use(
 // Response Interceptor: Global Error Handling
 apiClient.interceptors.response.use(
   (response) => {
+    // Log successful response
+    logger.logApiResponse(
+      response.config.method?.toUpperCase() || "GET",
+      response.config.url || "",
+      response.status,
+      response.data,
+    );
     return response.data; // Return only data for easier consumption
   },
   (error) => {
-    // Logging Error
-    console.group(
-      `❌ API Error: ${error.response?.status} ${error.config?.url}`,
+    const status = error.response?.status;
+    const url = error.config?.url;
+    const method = error.config?.method?.toUpperCase();
+
+    // Log API error
+    logger.logApiResponse(
+      method || "UNKNOWN",
+      url || "UNKNOWN",
+      status || 0,
+      error.response?.data || error.message,
     );
-    console.error("Message:", error.message);
-    console.error("Response Data:", error.response?.data);
-    console.groupEnd();
 
     // Handle global errors like 401 Unauthorized
-    // Note: AuthContext handles 401s by intercepting them and triggering logout.
-    // This block is kept for logging purposes or if we want to add non-logout 401 handling later.
-    if (error.response?.status === 401) {
-      console.warn("Unauthorized - request failed.");
+    if (status === 401) {
+      logger.warn(`Unauthorized access to ${url} - triggering logout logic`);
     }
 
     // Construct a standardized error object
@@ -55,7 +72,7 @@ apiClient.interceptors.response.use(
         error.response?.data?.message ||
         error.message ||
         "An unexpected error occurred",
-      status: error.response?.status,
+      status: status,
       original: error,
     };
 
