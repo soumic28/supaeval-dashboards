@@ -1,6 +1,7 @@
 import axios from "axios";
 import { toast } from "@/components/ui/use-toast";
 import { logger } from "./logger";
+import { logger as appLogger } from "../utils/logger";
 
 // Create a global Axios instance
 export const apiClient = axios.create({
@@ -60,6 +61,16 @@ apiClient.interceptors.response.use(
       status || 0,
       error.response?.data || error.message,
     );
+
+    // Azure AppInsights Logging
+    appLogger.error(`API Failure: ${method} ${url}`, {
+      url,
+      method,
+      status,
+      message: error.message,
+      data: error.response?.data,
+      timestamp: new Date().toISOString(),
+    });
 
     // Handle global errors like 401 Unauthorized
     if (status === 401) {
