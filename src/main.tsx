@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
 })
 
 // Startup Log - Should be visible if 'Info' is enabled in console
-logger.info(`SupaEval Dashboard starting up in ${import.meta.env.MODE} mode`);
+logger.info(`Frontend Logs Displaying: SupaEval Dashboard starting up in ${import.meta.env.MODE} mode`);
 
 // Global Error Handlers for AppInsights
 window.onerror = (message, source, lineno, colno, error) => {
