@@ -1,3 +1,6 @@
+import { SeverityLevel } from "@microsoft/applicationinsights-web";
+import { logger as appInsightsLogger } from "../utils/logger";
+
 /**
  * Centralized logging utility for SupaEval Dashboard.
  * Provides consistent formatting and level-based filtering.
@@ -38,14 +41,31 @@ class Logger {
   info(message: string, ...args: any[]) {
     // We use console.log instead of console.info to avoid some browser filters
     console.log(this.formatMessage("info", message), ...args);
+
+    // Send to AppInsights
+    appInsightsLogger.trace(
+      message,
+      { args, level: "info" },
+      SeverityLevel.Information,
+    );
   }
 
   warn(message: string, ...args: any[]) {
     console.warn(this.formatMessage("warn", message), ...args);
+
+    // Send to AppInsights
+    appInsightsLogger.trace(
+      message,
+      { args, level: "warn" },
+      SeverityLevel.Warning,
+    );
   }
 
   error(message: string, ...args: any[]) {
     console.error(this.formatMessage("error", message), ...args);
+
+    // Send to AppInsights
+    appInsightsLogger.error(message, { args, level: "error" });
   }
 
   /**

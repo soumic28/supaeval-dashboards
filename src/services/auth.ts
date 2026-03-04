@@ -1,19 +1,37 @@
 import { apiClient } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { logger as appLogger } from "@/utils/logger";
+import { setUserContext, clearUserContext } from "./appInsights";
 import type { AuthResponse, ApiKey } from "@/types/models";
 
 export const authService = {
   login: async (credentials: { email: string; password?: string }) => {
     logger.debug(`authService: Attempting login for ${credentials.email}`);
+    appLogger.event("LoginAttempt", { email: credentials.email });
+
     try {
       const result = await apiClient.post<any, AuthResponse>(
         "/auth/login",
         credentials,
       );
       logger.info(`authService: Login successful for ${credentials.email}`);
+
+      // Azure AppInsights User Context & Event
+      if (result.user?.id) {
+        setUserContext(result.user.id);
+      }
+      appLogger.event("LoginSuccess", {
+        email: credentials.email,
+        userId: result.user?.id,
+      });
+
       return result;
     } catch (error) {
       logger.error(`authService: Login failed for ${credentials.email}`, error);
+      appLogger.event("LoginFailure", {
+        email: credentials.email,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   },
@@ -24,18 +42,34 @@ export const authService = {
     name?: string;
   }) => {
     logger.info(`authService: Attempting signup for ${credentials.email}`);
+    appLogger.event("SignupAttempt", { email: credentials.email });
+
     try {
       const result = await apiClient.post<any, any>(
         "/auth/signup",
         credentials,
       );
       logger.info(`authService: Signup successful for ${credentials.email}`);
+
+      // Azure AppInsights User Context & Event
+      if (result.user?.id) {
+        setUserContext(result.user.id);
+      }
+      appLogger.event("SignupSuccess", {
+        email: credentials.email,
+        userId: result.user?.id,
+      });
+
       return result;
     } catch (error) {
       logger.error(
         `authService: Signup failed for ${credentials.email}`,
         error,
       );
+      appLogger.event("SignupFailure", {
+        email: credentials.email,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   },
@@ -45,6 +79,11 @@ export const authService = {
     try {
       const result = await apiClient.post("/auth/logout");
       logger.info("authService: Backend logout successful");
+
+      // Clear Azure AppInsights User Context
+      clearUserContext();
+      appLogger.event("Logout");
+
       return result;
     } catch (error) {
       logger.error("authService: Backend logout failed", error);
