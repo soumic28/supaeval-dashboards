@@ -1,6 +1,14 @@
 import { ApplicationInsights } from "@microsoft/applicationinsights-web";
 
-const connectionString = import.meta.env.VITE_APPINSIGHTS_CONNECTION_STRING;
+const rawConnectionString = import.meta.env.VITE_APPINSIGHTS_CONNECTION_STRING;
+
+// Robustly handle connection string format
+const connectionString =
+  rawConnectionString &&
+  !rawConnectionString.includes("InstrumentationKey=") &&
+  !rawConnectionString.includes("EndpointSuffix=")
+    ? `InstrumentationKey=${rawConnectionString}`
+    : rawConnectionString;
 
 export const appInsights = new ApplicationInsights({
   config: {
