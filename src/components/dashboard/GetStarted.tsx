@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     CheckCircle2, ChevronRight, Copy, Activity,
@@ -23,6 +24,7 @@ import { EnhancedTooltip } from '@/components/ui/EnhancedTooltip';
 import type { AgentEndpoint } from '@/types/AgentTypes';
 
 export function GetStarted() {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [tracesCount, setTracesCount] = useState(0);
     const [selectedPacks, setSelectedPacks] = useState<string[]>(['hallucination']);
@@ -902,11 +904,19 @@ export function GetStarted() {
                                             };
 
                                             const provisionedMetricIds: string[] = [];
-                                            const presetsToCreate = new Set<string>();
+                                            const selectedPresets = new Set<string>();
 
                                             for (const pack of selectedPacks) {
                                                 const preset = presetMapping[pack];
-                                                if (preset) presetsToCreate.add(preset);
+                                                if (preset) selectedPresets.add(preset);
+                                            }
+
+                                            // Consolidation Logic: RAG_TOOLS_V1 is a superset of RAG_V1.
+                                            // Creating both for the same scope causes 500 errors on the backend due to layer naming conflicts.
+                                            const presetsToCreate = Array.from(selectedPresets);
+                                            if (presetsToCreate.includes('RAG_TOOLS_V1') && presetsToCreate.includes('RAG_V1')) {
+                                                const index = presetsToCreate.indexOf('RAG_V1');
+                                                if (index > -1) presetsToCreate.splice(index, 1);
                                             }
 
                                             for (const preset of presetsToCreate) {
@@ -919,14 +929,18 @@ export function GetStarted() {
                                                             is_active: true,
                                                             version: "1.0.0"
                                                         },
-                                                        preset: preset
+                                                        preset: preset,
+                                                        options: {
+                                                            judge_model: "gpt-4.1-mini",
+                                                            language: "en",
+                                                            fail_closed: false
+                                                        }
                                                     });
                                                     if (packResponse.metric_ids && packResponse.metric_ids.length > 0) {
                                                         provisionedMetricIds.push(...packResponse.metric_ids);
                                                     }
                                                 } catch (err) {
                                                     console.error(`Failed to create preset ${preset}`, err);
-                                                    // Continue with others
                                                 }
                                             }
 
@@ -940,6 +954,11 @@ export function GetStarted() {
 
                                             toast({ title: "Setup Complete", description: "Your agent and metrics have been provisioned!" });
                                             setIsProvisioned(true);
+
+                                            // Navigate to configurations and auto-open the mapping dialog
+                                            setTimeout(() => {
+                                                navigate(`/configurations/metrics?agentId=${createdAgentId}`);
+                                            }, 1500);
                                         } catch (e) {
                                             console.error(e);
                                             toast({ title: "Error", description: "Failed to provision agent metrics.", variant: "destructive" });

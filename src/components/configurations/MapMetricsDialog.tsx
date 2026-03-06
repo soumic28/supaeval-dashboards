@@ -162,7 +162,12 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
                     is_active: true,
                     version: "1.0.0"
                 },
-                preset: presetId
+                preset: presetId,
+                options: {
+                    judge_model: "gpt-4.1-mini",
+                    language: "en",
+                    fail_closed: false
+                }
             });
 
             if (packResponse.metric_ids && packResponse.metric_ids.length > 0) {
