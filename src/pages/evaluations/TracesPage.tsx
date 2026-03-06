@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Filter, Download, Columns as ColumnsIcon, RefreshCw, CheckCircle2, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight, Check, Search, ChevronDown, AlertCircle, Zap, Thermometer, Coins, Layers, AlertTriangle } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { Filter, Download, Columns as ColumnsIcon, RefreshCw, ChevronLeft, ChevronRight, Copy, X, Calendar, User, Hash, Clock, CircleDollarSign, Fingerprint, Activity, ChevronsLeft, ChevronsRight, Check, Search, ChevronDown, Zap, Thermometer, Coins, Layers, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,8 +12,10 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
     const base = {
         service: "search-service-v2",
         kubernetesPod: `search-service-v2-${id.slice(3, 10)}-ghmxx`,
-        latency: (Math.random() * 2 + 0.1).toFixed(2) + "s",
+        latency: (Math.random() * 4).toFixed(2) + "s", // Increased range to test color coding
         cost: "$" + (Math.random() * 0.05).toFixed(4),
+        model: isAdvanced ? "gpt-4-turbo" : "gpt-3.5-turbo",
+        evalScore: Math.floor(Math.random() * 40) + 60, // 60-100 range
         tokens: {
             prompt: Math.floor(Math.random() * 1000) + 50,
             completion: Math.floor(Math.random() * 500) + 10,
@@ -25,20 +28,21 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
             {
                 id: `span_${Math.random().toString(36).substring(7)}`,
                 type: "Span",
-                name: "Router",
+                name: "Vector Retrieval",
                 startTime: "11:32:04.100",
-                duration: "45ms",
+                duration: "450ms",
                 status: "Success",
-                input: { route: "/search" }
+                input: { query: "semantic search query" },
+                output: { matches: 12 }
             },
             {
                 id: `gen_${Math.random().toString(36).substring(7)}`,
                 type: "Generation",
                 name: "LLM Completion",
-                startTime: "11:32:04.145",
+                startTime: "11:32:04.550",
                 duration: "2.1s",
                 status: "Success",
-                model: "gpt-4-turbo",
+                model: isAdvanced ? "gpt-4-turbo" : "gpt-3.5-turbo",
                 tokens: 450,
                 input: { messages: [{ role: "user", content: "Search for..." }] },
                 output: { text: "Here are the results..." }
@@ -46,17 +50,17 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
             {
                 id: `span_${Math.random().toString(36).substring(7)}`,
                 type: "Span",
-                name: "Database Vector Search",
-                startTime: "11:32:06.245",
+                name: "Reranking",
+                startTime: "11:32:06.650",
                 duration: "300ms",
                 status: "Success",
-                input: { query_vector: "[0.12, -0.44, ...]" },
-                output: { results_count: 5 }
+                input: { items: 12 },
+                output: { top_k: 5 }
             }
         ],
         logs: {
             "level": "debug",
-            "timestamp": "2026-02-18T11:14:53.717626Z",
+            "timestamp": new Date().toISOString(),
             "CloudProvider": "oci",
             "Environment": "dev",
             "RequestId": `req_${id}`,
@@ -67,8 +71,11 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
             "query": "What is the status of my latest evaluation?"
         },
         output: {
-            "response": "Your latest evaluation run finished successfully with a unified score of 92%.",
-            "sources": ["db.eval_runs"]
+            "response": id.startsWith('tr-massive')
+                ? "A".repeat(110000) // Test massive payload
+                : "Your latest evaluation run finished successfully with a unified score of 92%.",
+            "sources": ["db.eval_runs"],
+            "image_url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/www/public/og.png" // Test image modality
         }
     };
     base.tokens.total = base.tokens.prompt + base.tokens.completion;
@@ -77,33 +84,26 @@ const generateMockDetails = (id: string, isAdvanced: boolean = false) => {
 
 // Generate 32 mock traces
 const generateInitialTraces = () => Array.from({ length: 32 }).map((_, i) => {
-    const id = `tr-${Math.random().toString(16).slice(2, 10)}`;
+    const id = i === 5 ? 'tr-massive-payload' : `tr-${Math.random().toString(16).slice(2, 10)}`;
     const isAdvanced = i % 3 === 0;
     const names = ['Evaluation Query', 'Search Request', 'Chat Completion', 'Metrics Analysis', 'Router Span', 'Agent Step'];
 
-    // Generate dates over the last 30 days
     const now = new Date();
-    // Use a mix of recent and older traces (hours to days)
     const daysAgo = i < 8 ? (Math.random() / 24) : i < 15 ? (Math.random()) : (Math.random() * 30);
     const date = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
 
-    // Format "DD/MM/YYYY hh:mm:ss"
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    const min = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
+    const details = generateMockDetails(id, isAdvanced);
 
     return {
-        id: id + '...',
+        id: id,
         name: names[i % names.length],
-        request: '{"domain_name": "ai...", "agent_name": "supervisor..."}',
-        response: 'null',
+        request: JSON.stringify(details.input),
+        response: JSON.stringify(details.output),
         timestamp: date.getTime(),
-        requestTime: `${mm}/${dd}/${yyyy}, ${hh}:${min}:${ss}`,
         state: i % 7 === 0 ? 'Error' : 'OK',
-        details: generateMockDetails(id, isAdvanced)
+        metric: details.evalScore,
+        model: details.model,
+        details: details
     };
 });
 
@@ -134,10 +134,70 @@ const MetricCard = ({ title, value, subtext, icon: Icon, trend, trendValue, colo
     </Card>
 );
 
+const PayloadContent = ({ content, mode }: { content: any, mode: 'Pretty' | 'Raw' }) => {
+    const isImage = (val: any) => typeof val === 'string' && (val.startsWith('http') || val.startsWith('data:image'));
+    const isMassive = (val: any) => typeof val === 'string' && val.length > 100000;
+
+    const renderValue = (val: any) => {
+        if (isImage(val)) {
+            return (
+                <div className="mt-2 group/img relative inline-block">
+                    <img src={val} alt="Payload Modal" className="max-w-[200px] max-h-[150px] rounded-lg border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none">
+                        <Badge className="bg-background/80 text-foreground backdrop-blur-sm">Click to Enlarge</Badge>
+                    </div>
+                </div>
+            );
+        }
+        if (isMassive(val)) {
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-600 text-[11px] font-bold">
+                        <AlertTriangle className="w-4 h-4" />
+                        Payload truncated (100k+ chars) to prevent browser instability.
+                    </div>
+                    <p className="text-muted-foreground italic font-mono text-[10px]">{val.substring(0, 500)}...</p>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold">
+                        <Download className="w-3 h-3 mr-1.5" /> Download Full Payload
+                    </Button>
+                </div>
+            );
+        }
+        return typeof val === 'string' ? val : JSON.stringify(val, null, 2);
+    };
+
+    if (mode === 'Pretty') {
+        return (
+            <div className="space-y-4">
+                {Object.entries(content).map(([key, val]) => (
+                    <div key={key} className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{key}</span>
+                        <div className="text-sm font-medium leading-relaxed bg-muted/20 border border-transparent hover:border-border/30 rounded-lg p-3 transition-colors">
+                            {renderValue(val)}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-muted/30 border border-border/40 rounded-lg p-4 overflow-x-auto text-[11px] font-mono leading-relaxed group/json relative">
+            <pre className="text-foreground/90 dark:text-foreground/80 scrollbar-thin selection:bg-primary/20">
+                {JSON.stringify(content, null, 2)}
+            </pre>
+        </div>
+    );
+};
+
 const TracesPage = () => {
+    const navigate = useNavigate();
     const [traces, setTraces] = useState(generateInitialTraces());
     const [selectedTrace, setSelectedTrace] = useState<typeof traces[0] | null>(null);
+    const [selectedSpan, setSelectedSpan] = useState<any>(null);
+    const [payloadViewMode, setPayloadViewMode] = useState<'Pretty' | 'Raw'>('Pretty');
     const [activeTab, setActiveTab] = useState<'Overview' | 'Timeline' | 'Raw'>('Overview');
+
     const [sidebarWidth, setSidebarWidth] = useState(800);
     const isDragging = useRef(false);
     const dragStartX = useRef(0);
@@ -210,20 +270,29 @@ const TracesPage = () => {
     const [showTimeRangeDropdown, setShowTimeRangeDropdown] = useState(false);
     const [selectedTimeRange, setSelectedTimeRange] = useState('Custom');
 
-    // Filter State
+    // Filter State with Debouncing
     const [statusFilter, setStatusFilter] = useState<'All' | 'OK' | 'Error'>('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     // Columns State
     const [showColumnsDropdown, setShowColumnsDropdown] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState({
         id: true,
         name: true,
-        userId: true,
+        model: true,
         tokens: true,
         latency: true,
-        requestTime: true,
+        metric: true,
+        timestamp: true,
         state: true
     });
 
@@ -231,59 +300,98 @@ const TracesPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // Apply filters
-    const filteredTraces = traces.filter(t => {
-        const matchesStatus = statusFilter === 'All' || t.state === statusFilter;
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = searchQuery === '' ||
-            t.name.toLowerCase().includes(searchLower) ||
-            t.id.toLowerCase().includes(searchLower) ||
-            t.details.user_id.toLowerCase().includes(searchLower);
+    // Apply filters with useMemo to prevent unnecessary recalcs
+    const filteredTraces = useMemo(() => {
+        return traces.filter(t => {
+            const matchesStatus = statusFilter === 'All' || t.state === statusFilter;
+            const searchLower = debouncedSearchQuery.toLowerCase();
+            const matchesSearch = debouncedSearchQuery === '' ||
+                t.name.toLowerCase().includes(searchLower) ||
+                t.id.toLowerCase().includes(searchLower) ||
+                t.details.user_id.toLowerCase().includes(searchLower);
 
-        let matchesTime = true;
-        if (selectedTimeRange !== 'Custom') {
-            const now = new Date().getTime();
-            const traceTime = t.timestamp; // custom prop we added
-            if (selectedTimeRange === 'Last 1 hour') {
-                matchesTime = (now - traceTime) <= 60 * 60 * 1000;
-            } else if (selectedTimeRange === 'Last 24 hours') {
-                matchesTime = (now - traceTime) <= 24 * 60 * 60 * 1000;
-            } else if (selectedTimeRange === 'Last 7 days') {
-                matchesTime = (now - traceTime) <= 7 * 24 * 60 * 60 * 1000;
-            } else if (selectedTimeRange === 'Last 30 days') {
-                matchesTime = (now - traceTime) <= 30 * 24 * 60 * 60 * 1000;
+            let matchesTime = true;
+            if (selectedTimeRange !== 'Custom') {
+                const now = new Date().getTime();
+                const traceTime = t.timestamp; // custom prop we added
+                if (selectedTimeRange === 'Last 1 hour') {
+                    matchesTime = (now - traceTime) <= 60 * 60 * 1000;
+                } else if (selectedTimeRange === 'Last 24 hours') {
+                    matchesTime = (now - traceTime) <= 24 * 60 * 60 * 1000;
+                } else if (selectedTimeRange === 'Last 7 days') {
+                    matchesTime = (now - traceTime) <= 7 * 24 * 60 * 60 * 1000;
+                } else if (selectedTimeRange === 'Last 30 days') {
+                    matchesTime = (now - traceTime) <= 30 * 24 * 60 * 60 * 1000;
+                }
             }
-        }
 
-        return matchesStatus && matchesSearch && matchesTime;
-    })
-        .sort((a, b) => b.timestamp - a.timestamp); // sort by newest first
+            return matchesStatus && matchesSearch && matchesTime;
+        })
+            .sort((a, b) => b.timestamp - a.timestamp);
+    }, [traces, statusFilter, debouncedSearchQuery, selectedTimeRange]);
+
+    // Keyboard Navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!traces.length || (e.target as HTMLElement).tagName === 'INPUT') return;
+
+            const currentIndex = selectedTrace ? filteredTraces.findIndex(t => t.id === selectedTrace.id) : -1;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextTrace = filteredTraces[Math.min(currentIndex + 1, filteredTraces.length - 1)];
+                setSelectedTrace(nextTrace);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevTrace = filteredTraces[Math.max(currentIndex - 1, 0)];
+                setSelectedTrace(prevTrace);
+            } else if (e.key === 'Escape') {
+                setSelectedTrace(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedTrace, traces, filteredTraces]);
 
     const totalPages = Math.max(1, Math.ceil(filteredTraces.length / itemsPerPage));
     const paginatedTraces = filteredTraces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     // Reset page to 1 if filter changes
-    useEffect(() => { setCurrentPage(1) }, [statusFilter, searchQuery, selectedTimeRange]);
+    useEffect(() => { setCurrentPage(1) }, [statusFilter, debouncedSearchQuery, selectedTimeRange]);
 
-    // Format Start/End display dates
+    const formatLocalTime = (ts: number) => {
+        const date = new Date(ts);
+        return {
+            time: date.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            date: date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            full: date.toLocaleString([], { timeZoneName: 'short' })
+        };
+    };
+
+    const [hasNewTraces, setHasNewTraces] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (Math.random() > 0.7) {
+                setHasNewTraces(true);
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getDisplayDates = () => {
         const now = new Date();
-        let start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Custom implies ~30 days limit
+        let start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         if (selectedTimeRange === 'Last 1 hour') start = new Date(now.getTime() - 60 * 60 * 1000);
         else if (selectedTimeRange === 'Last 24 hours') start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         else if (selectedTimeRange === 'Last 7 days') start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         else if (selectedTimeRange === 'Last 30 days') start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        const fmt = (d: Date) => {
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yy = d.getFullYear();
-            const hh = String(d.getHours()).padStart(2, '0');
-            const mn = String(d.getMinutes()).padStart(2, '0');
-            return `${dd}-${mm}-${yy} ${hh}:${mn}`;
-        };
+        const fmt = (d: Date) => d.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
         return { start: fmt(start), end: fmt(now) };
     };
+
     const { start: displayStart, end: displayEnd } = getDisplayDates();
 
     // Handlers
@@ -300,9 +408,9 @@ const TracesPage = () => {
     };
 
     const handleExport = () => {
-        const headers = ['Trace ID', 'Name', 'User ID', 'Tokens', 'Latency', 'Request Time', 'State'].join(',');
+        const headers = ['Trace ID', 'Name', 'Model', 'Tokens', 'Latency', 'Eval Score', 'Timestamp', 'State'].join(',');
         const rows = traces.map(t =>
-            `"${t.id}","${t.name}","${t.details.user_id}","${t.details.tokens.total}","${t.details.latency}","${t.requestTime}","${t.state}"`
+            `"${t.id}","${t.name}","${t.model}","${t.details.tokens.total}","${t.details.latency}","${t.metric}","${new Date(t.timestamp).toISOString()}","${t.state}"`
         ).join('\n');
 
         const csv = `${headers}\n${rows}`;
@@ -354,10 +462,10 @@ const TracesPage = () => {
             `}} />
 
             <div className="relative flex h-full w-full overflow-hidden">
-                <main                 style={{ marginRight: selectedTrace ? `${sidebarWidth}px` : '0px' }}
-                className={cn(
-                    "space-y-6 flex-1 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent pr-4"
-                )}>
+                <main style={{ marginRight: selectedTrace ? `${sidebarWidth}px` : '0px' }}
+                    className={cn(
+                        "space-y-6 flex-1 overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent pr-4"
+                    )}>
                     <div className="w-full space-y-8 pb-12 px-2">
                         {/* Header section with Summary Stats */}
                         <div className="space-y-6">
@@ -523,8 +631,8 @@ const TracesPage = () => {
                                                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Toggle Visibility</div>
                                                     <div className="grid grid-cols-1 gap-1">
                                                         {Object.entries({
-                                                            id: 'Trace ID', name: 'Name', userId: 'User ID',
-                                                            tokens: 'Tokens', latency: 'Latency', requestTime: 'Request Time', state: 'State'
+                                                            id: 'Trace ID', name: 'Name', model: 'Model',
+                                                            tokens: 'Tokens', latency: 'Latency', metric: 'Eval Score', timestamp: 'Timestamp', state: 'State'
                                                         }).map(([key, label]) => (
                                                             <button
                                                                 key={key}
@@ -552,6 +660,21 @@ const TracesPage = () => {
                         {/* Table */}
                         <div className="space-y-4">
                             <div className="border rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm shadow-sm border-border/50">
+                                {hasNewTraces && (
+                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-top-4 duration-500">
+                                        <Button
+                                            size="sm"
+                                            className="bg-primary text-primary-foreground shadow-lg rounded-full px-4 py-1.5 h-auto text-xs font-bold gap-2 hover:scale-105 transition-transform"
+                                            onClick={() => {
+                                                handleRefresh();
+                                                setHasNewTraces(false);
+                                            }}
+                                        >
+                                            <RefreshCw className="w-3.5 h-3.5" />
+                                            New traces available. Click to refresh
+                                        </Button>
+                                    </div>
+                                )}
                                 {isRefreshing && (
                                     <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-20 flex items-center justify-center">
                                         <RefreshCw className="w-6 h-6 animate-spin text-primary" />
@@ -560,12 +683,14 @@ const TracesPage = () => {
                                 <table className="w-full text-left">
                                     <thead className="bg-muted/50 text-muted-foreground font-medium">
                                         <tr className="border-b border-border/40">
+                                            <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Status</th>
                                             <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Trace ID</th>
                                             {visibleColumns.name && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Name</th>}
-                                            {visibleColumns.userId && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">User ID</th>}
+                                            {visibleColumns.model && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Model</th>}
                                             {visibleColumns.tokens && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Tokens</th>}
                                             {visibleColumns.latency && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold text-center">Latency</th>}
-                                            {visibleColumns.requestTime && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Request time</th>}
+                                            {visibleColumns.metric && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold text-center">Eval Score</th>}
+                                            {visibleColumns.timestamp && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold">Timestamp</th>}
                                             {visibleColumns.state && <th className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold text-right">State</th>}
                                         </tr>
                                     </thead>
@@ -580,6 +705,12 @@ const TracesPage = () => {
                                                         selectedTrace?.id === trace.id ? "bg-primary/5 focus:bg-primary/5" : ""
                                                     )}
                                                 >
+                                                    <td className="px-6 py-4">
+                                                        <div className={cn(
+                                                            "w-2.5 h-2.5 rounded-full",
+                                                            trace.state === 'Error' ? "bg-red-500 animate-pulse" : "bg-green-500"
+                                                        )} />
+                                                    </td>
                                                     {visibleColumns.id && (
                                                         <td className="px-6 py-4 font-mono text-[11px] font-bold text-muted-foreground group-hover/row:text-primary transition-colors max-w-[120px] truncate" title={trace.id}>
                                                             {trace.id}
@@ -593,14 +724,11 @@ const TracesPage = () => {
                                                             </div>
                                                         </td>
                                                     )}
-                                                    {visibleColumns.userId && (
-                                                        <td className="px-6 py-4 shadow-none">
-                                                            <div className="flex items-center gap-2 group/user cursor-default">
-                                                                <div className="w-6 h-6 rounded-full bg-muted/60 flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border/40">
-                                                                    {trace.details.user_id.charAt(5).toUpperCase()}
-                                                                </div>
-                                                                <span className="font-mono text-[11px] font-bold text-muted-foreground truncate max-w-[100px]">{trace.details.user_id}</span>
-                                                            </div>
+                                                    {visibleColumns.model && (
+                                                        <td className="px-6 py-4">
+                                                            <Badge variant="outline" className="font-mono text-[10px] bg-muted/30">
+                                                                {trace.model}
+                                                            </Badge>
                                                         </td>
                                                     )}
                                                     {visibleColumns.tokens && (
@@ -614,35 +742,44 @@ const TracesPage = () => {
                                                     {visibleColumns.latency && (
                                                         <td className="px-6 py-4 text-[11px] font-mono">
                                                             <div className="flex items-center justify-center gap-1.5 transition-transform group-hover/row:scale-105">
-                                                                <Thermometer className={cn("w-3 h-3", parseFloat(trace.details.latency) > 1.5 ? "text-amber-500" : "text-blue-500")} />
-                                                                <span className={cn("font-bold tracking-tight", parseFloat(trace.details.latency) > 1.5 ? "text-amber-600" : "text-blue-600")}>{trace.details.latency}</span>
+                                                                <Thermometer className={cn("w-3 h-3", parseFloat(trace.details.latency) > 3.0 ? "text-red-500" : parseFloat(trace.details.latency) > 1.5 ? "text-amber-500" : "text-blue-500")} />
+                                                                <span className={cn("font-bold tracking-tight", parseFloat(trace.details.latency) > 3.0 ? "text-red-600" : parseFloat(trace.details.latency) > 1.5 ? "text-amber-600" : "text-blue-600")}>{trace.details.latency}</span>
                                                             </div>
                                                         </td>
                                                     )}
-                                                    {visibleColumns.requestTime && (
+                                                    {visibleColumns.metric && (
+                                                        <td className="px-6 py-4 text-center">
+                                                            <Badge className={cn(
+                                                                "font-bold text-[11px]",
+                                                                trace.metric > 90 ? "bg-green-500/10 text-green-600 border-green-200" :
+                                                                    trace.metric > 75 ? "bg-blue-500/10 text-blue-600 border-blue-200" :
+                                                                        "bg-amber-500/10 text-amber-600 border-amber-200"
+                                                            )}>
+                                                                {trace.metric}%
+                                                            </Badge>
+                                                        </td>
+                                                    )}
+                                                    {visibleColumns.timestamp && (
                                                         <td className="px-6 py-4">
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[11px] font-bold text-foreground whitespace-nowrap tracking-tight">{trace.requestTime.split(',')[1]}</span>
-                                                                <span className="text-[10px] text-muted-foreground font-medium whitespace-nowrap tracking-wider">{trace.requestTime.split(',')[0]}</span>
+                                                            <div className="flex flex-col gap-0.5 group/time relative" title={formatLocalTime(trace.timestamp).full}>
+                                                                <span className="text-[11px] font-bold text-foreground whitespace-nowrap tracking-tight">{formatLocalTime(trace.timestamp).time}</span>
+                                                                <span className="text-[10px] text-muted-foreground font-medium whitespace-nowrap tracking-wider">{formatLocalTime(trace.timestamp).date}</span>
                                                             </div>
                                                         </td>
                                                     )}
                                                     {visibleColumns.state && (
                                                         <td className="px-6 py-4 text-right">
-                                                            <div className="flex justify-end">
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className={cn(
-                                                                        "px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-widest flex items-center gap-1",
-                                                                        trace.state === 'Error'
-                                                                            ? "bg-red-500/10 text-red-600 border-red-200"
-                                                                            : "bg-green-500/10 text-green-600 border-green-200"
-                                                                    )}
-                                                                >
-                                                                    {trace.state === 'Error' ? <AlertCircle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                                                                    {trace.state}
-                                                                </Badge>
-                                                            </div>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={cn(
+                                                                    "px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-widest",
+                                                                    trace.state === 'Error'
+                                                                        ? "bg-red-500/10 text-red-600 border-red-200"
+                                                                        : "bg-green-500/10 text-green-600 border-green-200"
+                                                                )}
+                                                            >
+                                                                {trace.state}
+                                                            </Badge>
                                                         </td>
                                                     )}
                                                 </tr>
@@ -756,9 +893,31 @@ const TracesPage = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted/80 transition-all active:scale-95" onClick={() => setSelectedTrace(null)}>
-                                        <X className="w-5 h-5" />
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary font-bold text-xs rounded-lg"
+                                            onClick={() => {
+                                                const input = selectedTrace.details.input as any;
+                                                const query = input.query || input.text || JSON.stringify(input);
+
+                                                toast({
+                                                    title: "Opening in Playground",
+                                                    description: "Transferring trace context to simulation...",
+                                                });
+
+                                                navigate('/evaluations/prompt-playground', {
+                                                    state: { query }
+                                                });
+                                            }}
+                                        >
+                                            <Zap className="w-3.5 h-3.5 mr-1.5" /> Open in Playground
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted/80 transition-all active:scale-95" onClick={() => setSelectedTrace(null)}>
+                                            <X className="w-5 h-5" />
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-4 gap-4 mt-2">
@@ -850,28 +1009,51 @@ const TracesPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* Input / Output */}
-                                        <div className="space-y-4">
-                                            <div className="space-y-1.5">
-                                                <h3 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground/80">Input <Badge variant="outline" className="font-bold text-[9px] px-1 py-0">JSON</Badge></h3>
-                                                <div className="bg-muted/30 border border-border/40 rounded-lg p-3 overflow-x-auto text-[11px] font-mono leading-relaxed group/json relative">
-                                                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover/json:opacity-100 transition-opacity" onClick={() => handleCopy(JSON.stringify(selectedTrace.details.input, null, 2))}>
-                                                        <Copy className="w-3 h-3" />
-                                                    </Button>
-                                                    <pre className="text-blue-600/90 dark:text-blue-400/90">
-                                                        {JSON.stringify(selectedTrace.details.input, null, 2)}
-                                                    </pre>
+                                        {/* Payload Inspector with Pretty/Raw Toggle */}
+                                        <div className="space-y-6">
+                                            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                                                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Payload Inspector</h3>
+                                                <div className="flex bg-muted/50 p-1 rounded-lg border border-border/50">
+                                                    {(['Pretty', 'Raw'] as const).map(mode => (
+                                                        <button
+                                                            key={mode}
+                                                            onClick={() => setPayloadViewMode(mode)}
+                                                            className={cn(
+                                                                "px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all",
+                                                                payloadViewMode === mode ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                                            )}
+                                                        >
+                                                            {mode}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <h3 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground/80">Output <Badge variant="outline" className="font-bold text-[9px] px-1 py-0">JSON</Badge></h3>
-                                                <div className="bg-muted/30 border border-border/40 rounded-lg p-3 overflow-x-auto text-[11px] font-mono leading-relaxed group/json relative">
-                                                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover/json:opacity-100 transition-opacity" onClick={() => handleCopy(JSON.stringify(selectedTrace.details.output, null, 2))}>
-                                                        <Copy className="w-3 h-3" />
-                                                    </Button>
-                                                    <pre className="text-green-600/90 dark:text-green-400/90">
-                                                        {JSON.stringify(selectedTrace.details.output, null, 2)}
-                                                    </pre>
+
+                                            <div className="grid grid-cols-1 gap-6">
+                                                {/* Input Section */}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                                            Input
+                                                        </span>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={() => handleCopy(JSON.stringify(selectedTrace.details.input, null, 2))}>
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                    <PayloadContent content={selectedTrace.details.input} mode={payloadViewMode} />
+                                                </div>
+
+                                                {/* Output Section */}
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                                            Output
+                                                        </span>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={() => handleCopy(JSON.stringify(selectedTrace.details.output, null, 2))}>
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                    <PayloadContent content={selectedTrace.details.output} mode={payloadViewMode} />
                                                 </div>
                                             </div>
                                         </div>
@@ -910,15 +1092,29 @@ const TracesPage = () => {
 
                                             <div className="divide-y divide-border/30">
                                                 {selectedTrace.details.observations.map((obs, idx) => {
-                                                    // Simulated waterfall logic
                                                     const durVal = parseFloat(obs.duration);
-                                                    const maxDur = 2.5; // Scale to 2.5s for mock
+                                                    const maxDur = 3.0;
                                                     const width = (durVal / maxDur) * 100;
-                                                    const startOffset = (idx * 5); // Simulated stagger
+                                                    const startOffset = (idx * 8);
 
                                                     return (
-                                                        <div key={idx} className="flex group/span hover:bg-muted/30 transition-colors">
+                                                        <div
+                                                            key={idx}
+                                                            className={cn(
+                                                                "flex group/span hover:bg-muted/30 transition-colors cursor-pointer",
+                                                                selectedSpan?.id === obs.id && "bg-primary/5 border-l-2 border-primary"
+                                                            )}
+                                                            onClick={() => {
+                                                                setSelectedSpan(obs);
+                                                                setActiveTab('Overview');
+                                                                toast({
+                                                                    title: `${obs.name} Selected`,
+                                                                    description: "Payload inspector updated below.",
+                                                                });
+                                                            }}
+                                                        >
                                                             <div className="w-1/3 p-3 border-r border-border/30 relative flex flex-col gap-1">
+                                                                {/* ... (rest of the content remains similar) */}
                                                                 <div className="flex items-center gap-2 truncate">
                                                                     <div className={cn(
                                                                         "w-1.5 h-1.5 rounded-full shrink-0",
@@ -929,33 +1125,34 @@ const TracesPage = () => {
                                                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono">
                                                                     <span className="uppercase tracking-tighter opacity-70">{obs.type}</span>
                                                                     <span className="opacity-40">•</span>
-                                                                    <span>{obs.startTime.split('.')[0]}</span>
+                                                                    <span className={cn(obs.status === 'Failed' && "text-red-500 font-bold")}>{obs.status}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex-1 relative p-3 bg-muted/5 h-14 overflow-hidden">
-                                                                {/* Grid Lines */}
-                                                                <div className="absolute inset-0 flex pointer-events-none">
-                                                                    <div className="flex-1 border-r border-border/10"></div>
-                                                                    <div className="flex-1 border-r border-border/10"></div>
-                                                                    <div className="flex-1 border-r border-border/10"></div>
+                                                                {obs.status === 'Failed' && (
+                                                                    <div className="absolute inset-0 bg-red-500/5 flex items-center justify-center pointer-events-none z-10">
+                                                                        <div className="h-[2px] w-full bg-red-500/20" />
+                                                                    </div>
+                                                                )}
+                                                                <div className="absolute inset-0 flex pointer-events-none opacity-20">
+                                                                    <div className="flex-1 border-r border-border/50"></div>
+                                                                    <div className="flex-1 border-r border-border/50"></div>
+                                                                    <div className="flex-1 border-r border-border/50"></div>
                                                                     <div className="flex-1"></div>
                                                                 </div>
-
-                                                                {/* Duration Bar */}
                                                                 <div
                                                                     className={cn(
-                                                                        "absolute top-1/2 -translate-y-1/2 h-5 rounded-md flex items-center px-2 text-[9px] font-bold text-white transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_2px_8px_-2px_rgba(0,0,0,0.2)] animate-in zoom-in-95 fill-mode-backwards",
+                                                                        "absolute top-1/2 -translate-y-1/2 h-5 rounded-md flex items-center px-2 text-[9px] font-bold text-white transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-sm",
                                                                         obs.type === 'Generation'
-                                                                            ? "bg-gradient-to-r from-primary/90 to-primary border-l-2 border-primary-foreground/30"
-                                                                            : "bg-gradient-to-r from-blue-400 to-blue-600 border-l-2 border-white/30"
+                                                                            ? "bg-gradient-to-r from-primary/90 to-primary"
+                                                                            : "bg-gradient-to-r from-blue-400 to-blue-600"
                                                                     )}
                                                                     style={{
                                                                         left: `${startOffset}%`,
                                                                         width: `${width}%`,
-                                                                        animationDelay: `${idx * 150}ms`
                                                                     }}
                                                                 >
-                                                                    {width > 12 && <span className="truncate drop-shadow-sm leading-none">{obs.duration}</span>}
+                                                                    {width > 12 && <span className="truncate leading-none">{obs.duration}</span>}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -964,39 +1161,22 @@ const TracesPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* Observation Details (Expansion-like section) */}
-                                        <div className="space-y-4 pt-4">
-                                            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">Span Payloads</h4>
-                                            <div className="grid gap-3">
-                                                {selectedTrace.details.observations.map((obs, idx) => (
-                                                    <div key={idx} className="bg-card border border-border/50 rounded-xl p-4 shadow-sm">
-                                                        <div className="flex justify-between items-center mb-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={cn(
-                                                                    "w-2 h-2 rounded-full",
-                                                                    obs.type === 'Generation' ? "bg-primary" : "bg-blue-500"
-                                                                )}></div>
-                                                                <span className="font-bold text-sm">{obs.name}</span>
-                                                                <Badge variant="outline" className="text-[10px] text-muted-foreground">{obs.type}</Badge>
-                                                            </div>
-                                                            <span className="font-mono text-[11px] text-muted-foreground opacity-70">{obs.id}</span>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div className="space-y-1.5">
-                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70">Input</span>
-                                                                <div className="bg-muted/30 rounded-lg p-3 text-[11px] font-mono break-all line-clamp-3 hover:line-clamp-none transition-all cursor-text border border-transparent hover:border-border/30">
-                                                                    {JSON.stringify(obs.input)}
-                                                                </div>
-                                                            </div>
-                                                            <div className="space-y-1.5">
-                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70">Output</span>
-                                                                <div className="bg-muted/30 rounded-lg p-3 text-[11px] font-mono break-all line-clamp-3 hover:line-clamp-none transition-all cursor-text border border-transparent hover:border-border/30">
-                                                                    {JSON.stringify(obs.output)}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                                    {selectedSpan ? `Selected Span: ${selectedSpan.name}` : 'Trace Payload Overview'}
+                                                    {selectedSpan && <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => setSelectedSpan(null)}>Reset to Trace</Button>}
+                                                </h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-6">
+                                                <div className="space-y-3">
+                                                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Input</span>
+                                                    <PayloadContent content={selectedSpan ? selectedSpan.input : selectedTrace.details.input} mode={payloadViewMode} />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Output</span>
+                                                    <PayloadContent content={selectedSpan ? selectedSpan.output : selectedTrace.details.output} mode={payloadViewMode} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

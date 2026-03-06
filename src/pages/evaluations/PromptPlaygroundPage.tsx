@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { LayerSimulation } from '../../components/evaluations/LayerSimulation';
 import { Button } from '../../components/ui/Button';
 import { Play, RotateCcw, Settings2 } from 'lucide-react';
@@ -222,9 +223,10 @@ const metricsByMode = {
 };
 
 const PromptPlaygroundPage = () => {
+    const location = useLocation();
     const [activeStep, setActiveStep] = useState(-1);
     const [isRunning, setIsRunning] = useState(false);
-    const [userQuery, setUserQuery] = useState("Book a flight to NYC for next Tuesday, under $500");
+    const [userQuery, setUserQuery] = useState(location.state?.query || "Book a flight to NYC for next Tuesday, under $500");
     const [scenario, setScenario] = useState(baseScenario);
     const [expandAll, setExpandAll] = useState(false);
 
