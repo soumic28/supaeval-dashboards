@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/Badge';
 import { agentService } from '@/services/agents';
 import { layerService, type LayerResponse } from '@/services/layers';
 import { metricService } from '@/services/metrics';
+import { metricPacksService } from '@/services/metricPacks';
 import type { Agent } from '@/types/AgentTypes';
-import { Plus, BarChart2, Layers, Edit2, Trash2, Bot, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, BarChart2, Layers, Edit2, Trash2, Bot, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 
 interface MapMetricsDialogProps {
     open: boolean;
@@ -58,7 +59,7 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
 
     const fetchData = async () => {
         try {
-            const l = await layerService.getAll();
+            const l = await layerService.getAll({ hydrate: true });
             setLayers(l || []);
         } catch (e) {
             console.error("Failed to fetch layers", e);
@@ -144,6 +145,36 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
             await fetchData();
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const handleApplyPreset = async (presetId: string, packName: string) => {
+        setIsCreating(true);
+        try {
+            // Determine scope based on preset. RAG presets should use 'rag' scope.
+            const scope = presetId.startsWith('RAG') ? 'rag' : 'agent';
+
+            const packResponse = await metricPacksService.create({
+                metric_pack: {
+                    name: `${packName} Pack for ${agent.name}`,
+                    description: `Auto-provisioned ${packName} pack`,
+                    evaluation_scope: scope,
+                    is_active: true,
+                    version: "1.0.0"
+                },
+                preset: presetId
+            });
+
+            if (packResponse.metric_ids && packResponse.metric_ids.length > 0) {
+                const next = new Set(selectedMetrics);
+                packResponse.metric_ids.forEach(id => next.add(id));
+                setSelectedMetrics(next);
+            }
+            await fetchData();
+        } catch (e) {
+            console.error("Failed to apply preset", e);
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -249,6 +280,34 @@ export function MapMetricsDialog({ open, onOpenChange, agent, onSaved }: MapMetr
 
                     {/* Layer List */}
                     <div className="space-y-8">
+                        {/* Preset Actions */}
+                        <div className="flex flex-col gap-2 p-5 border rounded-xl bg-purple-50/50 border-purple-100">
+                            <h3 className="font-semibold text-sm flex items-center gap-2 text-purple-900">
+                                <Sparkles className="w-4 h-4 text-purple-600" /> Auto-Provision Metric Packs
+                            </h3>
+                            <p className="text-xs text-muted-foreground mb-2">Instantly add recommended evaluation layers tailored for specific agent architectures.</p>
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-purple-200 hover:bg-purple-100 hover:text-purple-900"
+                                    onClick={() => handleApplyPreset('RAG_V1', 'RAG Core')}
+                                    disabled={isCreating}
+                                >
+                                    Add RAG Core Pack
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-purple-200 hover:bg-purple-100 hover:text-purple-900"
+                                    onClick={() => handleApplyPreset('RAG_TOOLS_V1', 'RAG Tools')}
+                                    disabled={isCreating}
+                                >
+                                    Add Tool Calling Pack
+                                </Button>
+                            </div>
+                        </div>
+
                         {layers.length === 0 && !showNewLayerForm && (
                             <div className="text-center p-8 text-muted-foreground border border-dashed rounded-lg bg-card/50">
                                 <Layers className="h-8 w-8 mx-auto mb-3 opacity-50" />

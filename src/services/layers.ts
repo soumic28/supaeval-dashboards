@@ -21,10 +21,11 @@ export const layerService = {
     return apiClient.post<any, LayerResponse>("/layers/", data);
   },
 
-  getAll: async () => {
+  getAll: async (params?: { hydrate?: boolean }) => {
     // API returns a paginated structure: { items: [...], total, page, page_size }
     const response = await apiClient.get<any, { items?: LayerResponse[] }>(
       "/layers/",
+      { params },
     );
     return response?.items || [];
   },
