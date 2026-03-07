@@ -155,7 +155,7 @@ export function Layout() {
                     <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
                         <GlobalBreadcrumbs />
-                        <div className="max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+                        <div className="max-w-full mx-auto w-full animate-in fade-in duration-500 px-4 md:px-6">
                             <Outlet />
                         </div>
                     </main>
